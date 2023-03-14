@@ -564,11 +564,59 @@ class GameManager():
         sys.exit(0)
 
 
+def test_detecte_coordonnees_combinaison():
+    """
+        Vague test de la fonction detecte_coordonness_combinaison
+    """
 
+    raw_grilles = [
+        [[1]],
+        [ [0, 0, 0], [0, 1, 0], [0, 0, 0] ],
+        [ [0, 0, 0], [0, 1, 0], [0, 0, 0] ],
+        [ [1, 1, 1], [1, 0, 0], [1, 1, 0] ],
+        [ [1, 1, 1], [1, 0, 0], [1, 1, 0] ],
+    ]
 
-# TODO : test_detecte_coordonnees_combinaison
+    all_expected = [
+        [(0, 0)],
+        [(1, 1)],
+        [(0, 0), (0, 1), (0, 2), (1, 0), (1, 2), (2, 0), (2, 1), (2, 2)],
+        [(0, 0), (0, 1), (0, 2), (1, 0), (2, 0), (1, 2)],
+        [(1, 1), (2, 1), (2, 2)],
+    ]
+
+    test_positions = [
+        (0, 0),
+        (1, 1),
+        (0, 0),
+        (1, 0),
+        (2, 1)
+    ]
+
+    grille_inst = Grille()
+
+    i = 1
+    for (grille, test_pos, expected) in zip(raw_grilles, test_positions, all_expected):
+        print(f"Test n. {i}")
+        grille_inst.grille = grille
+        _out = detecte_coordonnees_combinaison(grille_inst, test_pos[0], test_pos[1])
+
+        if all(e in expected for e in _out) and all(e in _out for e in expected):
+            print("  -> Test passed")
+        else:
+            print("  -> Test failed :(")
+            print("\n Function returned: "+str(_out))
+            sys.exit(1)
+
+        i += 1
+
+    print("\n\nAll test passed :)")
+    sys.exit(0)
 
 
 if __name__ == "__main__":
-    game = GameManager()
-    game.run()
+    if "--test" in sys.argv:
+        test_detecte_coordonnees_combinaison()
+    else:
+        game = GameManager()
+        game.run()
