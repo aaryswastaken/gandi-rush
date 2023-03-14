@@ -498,6 +498,14 @@ def os_clear():
 
     os.system('cls' if os.name == 'nt' else 'clear')
 
+def show_endgame():
+    """
+        show_endgame: Affiche l'écran de fin
+    """
+    os_clear()
+
+    print("\n\nMerci d'avoir joué à GANDI RUSH :)\n\n")
+
 
 class GameManager():
     """
@@ -567,13 +575,6 @@ class GameManager():
             elif result == 2:
                 input("\n\nMouvement inutile. Pressez entrée pour continer...")
 
-    def show_endgame(self):
-        """
-            show_endgame: Affiche l'écran de fin
-        """
-        os_clear()
-
-        print("\n\nMerci d'avoir joué à GANDI RUSH :)\n\n")
 
     def run(self):
         """
@@ -594,7 +595,7 @@ class GameManager():
         try:
             self.main_loop()
         except KeyboardInterrupt:
-            self.show_endgame()
+            show_endgame()
 
         sys.exit(0)
 
