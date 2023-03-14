@@ -440,7 +440,7 @@ class GameManager():
         Classe de gestion du jeu
     """
 
-    def __init__(self, animation_period=0.25):
+    def __init__(self, animation_period=0.15):
         self.grille = Grille()
         self.physique = Physique(self.grille)
         self.animation_period = animation_period
