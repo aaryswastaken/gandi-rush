@@ -444,6 +444,7 @@ class GameManager():
         self.grille = Grille()
         self.physique = Physique(self.grille)
         self.animation_period = animation_period
+        self.do_animation = False
 
     def ask_value(self, query="?", q_min=None, q_max=None):
         """
@@ -554,7 +555,9 @@ class GameManager():
             permutation.append(other)
 
             result = self.physique.tick(permutation,
-                    animation_tick=lambda: self.print_grid(delay=self.animation_period))
+                    animation_tick=
+                        (lambda: self.print_grid(delay=self.animation_period))
+                        if self.do_animation else (lambda: None))
 
             if result == 0:
                 pass
@@ -580,6 +583,12 @@ class GameManager():
         self.grille.genere_alea(dimensions[0], dimensions[1], 4)
 
         self.physique.refresh_grid_info() # Lol
+
+        raw_do_anim = self.ask_value("\nVoulez-vous des animations?" + \
+                "\n (1=oui, 0=non)\n\n> ", q_min=-1, q_max=2)
+
+        if raw_do_anim == 1:
+            self.do_animation = True
 
         try:
             self.main_loop()
