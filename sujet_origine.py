@@ -59,6 +59,81 @@ class Grille():
 
             print("", end="\n")
 
+def explore_adj(_grille, pos_x, pos_y, scanned_value):
+    """
+        explore_adj: Renvoie True si la valeur du tableau aux coordonnees indiquees est celle
+            requise. Renvoie False si l'index existe pas
+
+        Parametres:
+            _grille (t[][]): Le tableau a chercher
+            pos_x (int): la position en x
+            pos_y (int): la position en y
+            scanned_value (t): La valeur comparee
+
+        Renvoie:
+            out (bool): Si la condition est complete
+    """
+
+    if pos_x < 0 or pos_y < 0:
+        return False
+
+    try:
+        return _grille[pos_y][pos_x] == scanned_value
+    except IndexError:
+        return False
+
+
+def detecte_coordonnees_combinaison(grille, i, j):
+    """
+        detecte_coordonnees_combinaison: Renvoie une liste des item adjacent de meme nature
+
+        Note: Il est absurde d'écrire cette fonction en dehors d'une classe mais c'est pour
+        le respect du sujet
+
+        Parametres:
+            grille (Grille): la grille
+            i (int): coordonnees en x
+            j (int): coordonnees en y
+
+        Renvoie:
+            out (tuple<int>[]): les cases adjacentes
+    """
+
+    _grille = grille.grille
+    type_to_mask = _grille[j][i]
+
+    mask = [[int(_e == type_to_mask) for _e in s] for s in _grille]
+
+    scanned = [[0 for _e in s] for s in _grille]
+    scanned[j][i] = 1
+
+    iterations = [[(i, j)]]
+
+    stop = False
+
+    # Implémentation nulle a chier mais on a pas le droit a la récursivité
+    while not stop:
+        stop = True # By default we're gonna stop at the end of the iterations
+
+        iterations.append([])
+        for prev_iteration in iterations[-2]:
+            # Exploring adjacent cases
+
+            for direction in [(-1, 0), (1, 0), (0, 1), (0, -1)]:
+                pos_x = prev_iteration[0] + direction[0]
+                pos_y = prev_iteration[1] + direction[1]
+
+                if explore_adj(mask, pos_x, pos_y, 1):
+                    # Here is a little hack to simplify a safe version of "if scanned[y][x] == 1"
+                    if explore_adj(scanned, pos_x, pos_y, 0):
+                        scanned[pos_y][pos_x] = 1
+                        iterations[-1].append((pos_x, pos_y))
+
+                        stop = False # But if we find something then we don't exit
+
+
+    return [item for sub_list in iterations for item in sub_list if len(item) == 2]
+
 
 class Physique():
     """
@@ -101,11 +176,14 @@ class Physique():
         if self.mode == 3:
             self.__tick_mode_3()
 
-        return None
-
 
 if __name__ == "__main__":
     grid = Grille()
 
     grid.genere_alea(5, 5, 4)
     grid.affiche_grille(charset=["-", "+", "*", "o"])
+    print("\n")
+
+    _out = detecte_coordonnees_combinaison(grid, 2, 2)
+
+    print(_out)
