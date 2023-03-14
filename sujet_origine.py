@@ -3,6 +3,7 @@ from random import randint
 from math import log10
 import os
 import sys
+from time import sleep
 
 
 class Grille():
@@ -350,7 +351,7 @@ class Physique():
 
         return 0
 
-    def __tick_mode_3(self, permutation):
+    def __tick_mode_3(self, permutation, animation_tick):
         """
             __tick_mode_3 (private): Wrapper pour __routine_tick_mode_3
         """
@@ -359,8 +360,11 @@ class Physique():
         if res != 0:
             return res
 
+        animation_tick()
+
         self.do_gravity()
 
+        animation_tick()
 
         # Doit refresh toute la grille (doit opti)
         ancienne_grille = self.grille.clone()
@@ -374,7 +378,11 @@ class Physique():
                 for (pos_x, _e) in enumerate(grille_sl):
                     self.__routine_tick_mode_3([(pos_x, pos_y)], solo=True)
 
+            animation_tick()
+
             self.do_gravity()
+
+            animation_tick()
 
         return 0
 
@@ -401,7 +409,7 @@ class Physique():
 
         return distance_manhattan == 1
 
-    def tick(self, permutation):
+    def tick(self, permutation, animation_tick=lambda: None):
         """
             tick: Actualise la grille selon le mode de jeu
 
@@ -422,7 +430,7 @@ class Physique():
             return 1
 
         if self.mode == 3:
-            return self.__tick_mode_3(permutation)
+            return self.__tick_mode_3(permutation, animation_tick)
 
         raise TypeError("Not impplemented yet")
 
@@ -432,18 +440,19 @@ class GameManager():
         Classe de gestion du jeu
     """
 
-    def __init__(self):
+    def __init__(self, animation_period=0.25):
         self.grille = Grille()
         self.physique = Physique(self.grille)
+        self.animation_period = animation_period
 
     def ask_value(self, query="?", q_min=None, q_max=None):
         """
             ask_value: Demande une valeur numerique au joueur
 
             Parametres:
-                query (str, optional): La demande (default: ?)
-                q_min (int, optional): Minimum (default: None)
-                q_max (int, optional): Maximum (default: None)
+                query (str, optional): La demande [default="?"]
+                q_min (int, optional): Minimum [default: None]
+                q_max (int, optional): Maximum [default: None]
 
             Renvoie
                 res (int): La valeur entrée par le joueur
@@ -499,14 +508,29 @@ class GameManager():
 
         os.system('cls' if os.name == 'nt' else 'clear')
 
+    def print_grid(self, delay=0):
+        """
+            print_grid: Routine d'affichage de la grille
+
+            Parametres:
+                delay (int, optional): Délai d'attente (utile pour l'animation) [default=0]
+
+            Renvoie:
+                None
+        """
+        self.os_clear()
+        print(" *-*-*-*-* GANDI RUN *-*-*-*-* \nAppuyez sur ctrl+c pour quitter\n\n")
+        self.grille.affiche_grille(charset=["-", "+", "*", "o"])
+
+        sleep(delay)
+
+
     def main_loop(self):
         """
             main_loop: Boucle principale du jeu
         """
         while True:
-            self.os_clear()
-            print(" *-*-*-*-* GANDI RUN *-*-*-*-* \nAppuyez sur ctrl+c pour quitter\n\n")
-            self.grille.affiche_grille(charset=["-", "+", "*", "o"])
+            self.print_grid()
             print("\n\n\n")
             print("1=haut / 2=droite / 3=bas / 4=gauche\n")
             print("Quelle coordonnées voulez vous permutter?")
@@ -529,7 +553,8 @@ class GameManager():
 
             permutation.append(other)
 
-            result = self.physique.tick(permutation)
+            result = self.physique.tick(permutation,
+                    animation_tick=lambda: self.print_grid(delay=self.animation_period))
 
             if result == 0:
                 pass
