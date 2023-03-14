@@ -435,6 +435,70 @@ class Physique():
         raise TypeError("Not impplemented yet")
 
 
+def ask_value(query="?", q_min=None, q_max=None):
+    """
+        ask_value: Demande une valeur numerique au joueur
+
+        Parametres:
+            query (str, optional): La demande [default="?"]
+            q_min (int, optional): Minimum [default: None]
+            q_max (int, optional): Maximum [default: None]
+
+        Renvoie
+            res (int): La valeur entrée par le joueur
+    """
+
+    res = None
+
+    while res is None:
+        raw_response = input(query)
+        try:
+            res = int(raw_response)
+        except ValueError:
+            print("Valeur incorrecte, veuillez entrer un entier")
+            res = None
+
+        if res is not None:
+            if q_min is not None:
+                if res < q_min:
+                    res = None
+                    print(f"La valeur doit être au dessus de {q_min}")
+
+        if res is not None:
+            if q_max is not None:
+                if res > q_max:
+                    res = None
+                    print(f"La valeur doit être en dessous de {q_max}")
+
+    return res
+
+
+def ask_dimensions():
+    """
+        ask_dimensions: Premier écran, demande au joueur la taille de la grille
+
+        Parametres:
+            None
+
+        Return:
+            dimensions (tuple<int>): Les dimensions entrées
+    """
+    print(" *-*-*-* Bienvenue dans la version Terminal de Gandi Rush *-*-*-* ")
+    print(" -> Entrez une dimension de grille pour commencer:\n")
+
+    size_x = ask_value(query="Largeur? ", q_min=2, q_max=150)
+    size_y = ask_value(query="Hauteur? ", q_min=2, q_max=150)
+
+    return (size_x, size_y)
+
+def os_clear():
+    """
+        os_clear: Efface le terminal pour plus de visibilité
+    """
+
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+
 class GameManager():
     """
         Classe de gestion du jeu
@@ -446,69 +510,6 @@ class GameManager():
         self.animation_period = animation_period
         self.do_animation = False
 
-    def ask_value(self, query="?", q_min=None, q_max=None):
-        """
-            ask_value: Demande une valeur numerique au joueur
-
-            Parametres:
-                query (str, optional): La demande [default="?"]
-                q_min (int, optional): Minimum [default: None]
-                q_max (int, optional): Maximum [default: None]
-
-            Renvoie
-                res (int): La valeur entrée par le joueur
-        """
-
-        res = None
-
-        while res is None:
-            raw_response = input(query)
-            try:
-                res = int(raw_response)
-            except ValueError:
-                print("Valeur incorrecte, veuillez entrer un entier")
-                res = None
-
-            if res is not None:
-                if q_min is not None:
-                    if res < q_min:
-                        res = None
-                        print(f"La valeur doit être au dessus de {q_min}")
-
-            if res is not None:
-                if q_max is not None:
-                    if res > q_max:
-                        res = None
-                        print(f"La valeur doit être en dessous de {q_max}")
-
-        return res
-
-
-    def ask_dimensions(self):
-        """
-            ask_dimensions: Premier écran, demande au joueur la taille de la grille
-
-            Parametres:
-                None
-
-            Return:
-                dimensions (tuple<int>): Les dimensions entrées
-        """
-        print(" *-*-*-* Bienvenue dans la version Terminal de Gandi Rush *-*-*-* ")
-        print(" -> Entrez une dimension de grille pour commencer:\n")
-
-        size_x = self.ask_value(query="Largeur? ", q_min=2, q_max=150)
-        size_y = self.ask_value(query="Hauteur? ", q_min=2, q_max=150)
-
-        return (size_x, size_y)
-
-    def os_clear(self):
-        """
-            os_clear: Efface le terminal pour plus de visibilité
-        """
-
-        os.system('cls' if os.name == 'nt' else 'clear')
-
     def print_grid(self, delay=0):
         """
             print_grid: Routine d'affichage de la grille
@@ -519,7 +520,7 @@ class GameManager():
             Renvoie:
                 None
         """
-        self.os_clear()
+        os_clear()
         print(" *-*-*-*-* GANDI RUN *-*-*-*-* \nAppuyez sur ctrl+c pour quitter\n\n")
         self.grille.affiche_grille(charset=["-", "+", "*", "o"])
 
@@ -535,9 +536,9 @@ class GameManager():
             print("\n\n\n")
             print("1=haut / 2=droite / 3=bas / 4=gauche\n")
             print("Quelle coordonnées voulez vous permutter?")
-            permut_x = self.ask_value(query="x? ", q_min=0)
-            permut_y = self.ask_value(query="y? ", q_min=0)
-            direction = self.ask_value(query="direction? ", q_min=0, q_max=5)
+            permut_x = ask_value(query="x? ", q_min=0)
+            permut_y = ask_value(query="y? ", q_min=0)
+            direction = ask_value(query="direction? ", q_min=0, q_max=5)
 
             permutation = [(permut_x-1, permut_y-1)]
 
@@ -570,7 +571,7 @@ class GameManager():
         """
             show_endgame: Affiche l'écran de fin
         """
-        self.os_clear()
+        os_clear()
 
         print("\n\nMerci d'avoir joué à GANDI RUSH :)\n\n")
 
@@ -579,12 +580,12 @@ class GameManager():
             run: Point d'entrée du jeu
         """
 
-        dimensions = self.ask_dimensions()
+        dimensions = ask_dimensions()
         self.grille.genere_alea(dimensions[0], dimensions[1], 4)
 
         self.physique.refresh_grid_info() # Lol
 
-        raw_do_anim = self.ask_value("\nVoulez-vous des animations?" + \
+        raw_do_anim = ask_value("\nVoulez-vous des animations?" + \
                 "\n (1=oui, 0=non)\n\n> ", q_min=-1, q_max=2)
 
         if raw_do_anim == 1:
