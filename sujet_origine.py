@@ -1,4 +1,4 @@
-""" Utilisation de ce module pour la génération aléatoire """
+""" Import des modules """
 from random import randint
 from math import log10
 import os
