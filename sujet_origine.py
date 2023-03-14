@@ -269,6 +269,7 @@ class Physique():
                 i = 0
                 while i < len(line) and line[i] == -1:
                     line[i] = self.grille.genere_case()
+                    i += 1
 
             mutated_transposed.append(line)
 
