@@ -139,6 +139,33 @@ class Grille():
 
         print("Finale: "+str(self.grille))
 
+    def clone(self):
+        """
+            clone: Clone la grille pour sauvegarde
+
+            Parametres:
+                None
+
+            Renvoie:
+                grille_clone (int[][]): Le clone de la grille
+        """
+
+        return [list(sl) for sl in self.grille]
+
+    def do_compare(self, grille):
+        """
+            do_compare: Compare la grille a une autre pour voir si il y a une difference
+
+            Parametres:
+                grille (int[][]): La grille a comparer
+
+            Renvoie:
+                res (bool): True si différentes
+        """
+
+        return any(any(e[0] != e[1] for e in zip(*grilles_slice))
+                   for grilles_slice in zip(self.grille, grille))
+
 
 def explore_adj(_grille, pos_x, pos_y, scanned_value):
     """
@@ -297,32 +324,70 @@ class Physique():
 
         return 0
 
-    def __tick_mode_3(self, permutation):
+    def __routine_tick_mode_3(self, permutation, solo=False):
         """
-            tick_mode_3 (private): Tick mais pour le mode 3
+            __routine_tick_mode_3 (private): Tick mais pour le mode 3
         """
 
-        # Permutation
-        self.grille.permute(permutation)
+        to_delete_array = []
 
-        to_delete0 = detecte_coordonnees_combinaison(self.grille, permutation[0][0],
-                        permutation[0][1])
-        to_delete1 = detecte_coordonnees_combinaison(self.grille, permutation[1][0],
-                        permutation[1][1])
+        if not solo:
+            # Permutations
+            self.grille.permute(permutation)
 
-        if len(to_delete0) < 3 and len(to_delete1) < 3:
-            # Pas possible
-            self.grille.permute(permutation) # On remets comme de base
-            return 2
+            to_delete0 = detecte_coordonnees_combinaison(self.grille, permutation[0][0],
+                            permutation[0][1])
+            to_delete1 = detecte_coordonnees_combinaison(self.grille, permutation[1][0],
+                            permutation[1][1])
 
-        for to_delete in [to_delete0, to_delete1]:
+            if len(to_delete0) < 3 and len(to_delete1) < 3:
+                # Pas possible
+                self.grille.permute(permutation) # On remets comme de base
+                return 2
+
+            to_delete_array = [to_delete0, to_delete1]
+        else:
+            # Utilisé dans le check global pour le refresh de la grille
+            to_delete_array = [
+                    detecte_coordonnees_combinaison(self.grille, permutation[0][0],
+                            permutation[0][1])
+                    ]
+
+        for to_delete in to_delete_array:
             if len(to_delete) >= 3:
                 for coords in to_delete:
                     self.grille.grille[coords[1]][coords[0]] = -1
 
+        return 0
+
+    def __tick_mode_3(self, permutation):
+        """
+            __tick_mode_3 (private): Wrapper pour __routine_tick_mode_3
+        """
+
+        res = self.__routine_tick_mode_3(permutation)
+        if res != 0:
+            return res
+
         self.do_gravity()
 
+
+        # Doit refresh toute la grille (doit opti)
+        ancienne_grille = self.grille.clone()
+        premiere = True
+
+        while self.grille.do_compare(ancienne_grille) or premiere:
+            premiere = False
+
+            ancienne_grille = self.grille.clone()
+            for (pos_y, grille_sl) in enumerate(self.grille.grille):
+                for (pos_x, _e) in enumerate(grille_sl):
+                    self.__routine_tick_mode_3([(pos_x, pos_y)], solo=True)
+
+            self.do_gravity()
+
         return 0
+
 
     def is_legal_permutation(self, permutation):
         """
