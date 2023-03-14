@@ -1,0 +1,70 @@
+gui: Interface Graphique {
+    ml: Main Loop {
+        shape: class
+
+        event_schelduler: "ref"
+        start_main(): None
+        exit_loop(): None
+    }
+}
+
+ev-s: Event Schelduler {
+    shape: class
+
+    events: "event[]"
+    next_event(to_id int): "event"
+    pool_event(to_id int, event event): None
+}
+
+grid: Grid Manager {
+    shape: class
+
+    grid: Grid
+    event_schelduler: "ref"
+    generator: GridGenerator
+
+    start_main(): None
+    stop_main(): None
+}
+
+Grid {
+    shape: class
+
+    grid: "int[][]"
+}
+
+gen: Grid Generator {
+    shape: class
+
+    generate(level int): Grid
+}
+
+orchestrator: Orchestrator {
+    shape: class
+
+    run(): None
+    exit(): None
+}
+
+event {
+    shape: class
+
+    msg_direction: int
+    payload: Object
+}
+
+gui.ml.event_schelduler <-> ev-s: ref {
+    style.stroke-dash: 5
+}
+ev-s.events <-> event: ref to multiple {
+    style.stroke-dash: 5
+}
+
+grid.event_schelduler <-> ev-s: ref {
+    style.stroke-dash: 5
+}
+
+grid.generator <-> gen: ref {
+    style.stroke-dash: 5
+}
+
