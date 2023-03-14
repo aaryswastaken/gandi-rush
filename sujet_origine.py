@@ -59,6 +59,74 @@ class Grille():
 
             print("", end="\n")
 
+    def genere_case(self):
+        """
+            genere_case: Génère une nouvelle case avec les bons paramètres de génération
+
+            Parametres:
+                None
+
+            Renvoie:
+                out (int): L'id
+        """
+
+        return randint(1, self.nb_max)
+
+    def permute(self, permutation):
+        """
+            permute: Permute (assume que la permutation est légale)
+
+            Parametres:
+                permutation (tuple<tuple<int>>)
+
+            Renvoie:
+                None
+        """
+
+        # g[y1][x1], g[y2][x2] = g[y2][x2], g[y1][x1]
+
+        self.grille[permutation[0][1]][permutation[0][0]], \
+            self.grille[permutation[1][1]][permutation[1][0]] = \
+            self.grille[permutation[1][1]][permutation[1][0]], \
+            self.grille[permutation[0][1]][permutation[0][0]]
+
+    def transpose(self):
+        """
+            transpose: Transpose la grille
+
+            Parametres:
+                None
+
+            Renvoie:
+                transposed (int[][]): La grille transposée
+        """
+
+        transposed = [[] for _i in range(len(self.grille[0]))]
+
+        for ligne in self.grille:
+            for (col_id, element) in enumerate(ligne):
+                transposed[col_id].append(element)
+
+        return transposed
+
+    def from_transposed(self, transposed):
+        """
+            from_transposed: Remplace la grille active par la transposition inverse
+
+            Parametres:
+                transposed (int[][]): Une matrice transposée
+
+            Renvoie:
+                None
+        """
+
+        self.grille = [[] for _i in range(len(transposed[0]))]
+
+        for ligne in transposed:
+            for (col_id, element) in enumerate(ligne):
+                self.grille[col_id].append(element)
+
+
 def explore_adj(_grille, pos_x, pos_y, scanned_value):
     """
         explore_adj: Renvoie True si la valeur du tableau aux coordonnees indiquees est celle
@@ -144,37 +212,148 @@ class Physique():
         self.grille = grille
         self.mode = mode
 
-    def get_mode(self):
+        self.max_x = 0
+        self.max_y = 0
+
+        self.refresh_grid_info()
+
+    def refresh_grid_info(self):
         """
-            get_mode: Pour rendre pylint content
+            refresh_grid_info: Actualise le cache sur le paramètre de la grille (x / y)
 
             Parametres:
                 None
 
             Renvoie:
-                mode (int): mode de physique
+                None
         """
-        return self.mode
+        self.max_y = len(self.grille.grille)
 
-    def __tick_mode_3(self):
+        if self.max_y != 0:
+            self.max_x = len(self.grille.grille[0])
+        else:
+            self.max_x = 0
+
+    def do_gravity(self):
+        """
+            do_gravity: Effectue la gravité
+
+            Parametres:
+                None
+
+            Renvoie:
+                None
+
+            Notes:
+                -1 dans self.grille.grille indique une case vide qu'il faut combler
+        """
+
+        transposed = self.grille.transpose()
+
+        mutated_transposed = []
+
+        for line in transposed:
+            if -1 in line: # If not, skip
+                i = len(line) - 1
+                n_occurences = sum(int(e == -1) for e in line)
+
+                # Migrates values:
+                # [2, -1, 4, 5, -1, 6] -> [-1, -1, 2, 4, 5, 6]
+                while i > (n_occurences-1):
+                    while line[i] == -1:
+                        new_line = [-1, *line[0:i], line[i:]]
+                        line = new_line
+                    i -= 1
+
+                # Repopulate
+                i = 0
+                while i < len(line) and line[i] == -1:
+                    line[i] = self.grille.genere_case()
+
+            mutated_transposed.append(line)
+
+        self.grille.from_transposed(mutated_transposed)
+
+        return 0
+
+
+
+    def __tick_mode_3(self, permutation):
         """
             tick_mode_3 (private): Tick mais pour le mode 3
         """
 
+        # Permutation
+        self.grille.permute(permutation)
 
-    def tick(self):
+        to_delete0 = detecte_coordonnees_combinaison(self.grille, permutation[0][0],
+                        permutation[0][1])
+        to_delete1 = detecte_coordonnees_combinaison(self.grille, permutation[1][0],
+                        permutation[1][1])
+
+        if len(to_delete0) < 3 and len(to_delete1) < 3:
+            # Pas possible
+            self.grille.permute(permutation) # On remets comme de base
+            return 2
+
+        for to_delete in [to_delete0, to_delete1]:
+            if len(to_delete) >= 3:
+                for coords in to_delete:
+                    self.grille.grille[coords[1]][coords[0]] = -1
+
+        self.do_gravity()
+
+        return 0
+
+
+    def is_legal_permutation(self, permutation):
+        """
+            is_legal_permutation: Indique si la permutation est légale d'un point de vue
+                grille (ne peut dépasser les bornes)
+
+            Parametres:
+                permutation (tuple<tuple<int>>): deux cases a tester
+
+            Renvoie:
+                possible (bool): si la permutation est possible
+        """
+
+        for permut in permutation:
+            if permut[0] < 0 or permut[1] < 0 or \
+                permut[0] >= self.max_x or permut[1] >= self.max_y:
+                return False
+
+        distance_manhattan = abs(permutation[0][0] - permutation[1][0]) + \
+            abs(permutation[1][0] - permutation[1][1])
+
+        return distance_manhattan == 1
+
+    def tick(self, permutation):
         """
             tick: Actualise la grille selon le mode de jeu
 
             Parametres:
-                None
+                permutation (tuple<tuple<int>>): deux cases permutées
 
             Renvoie:
-                None
+                state (int): Le code de retour
+
+            Note:
+                state:
+                    - 0 = ok
+                    - 1 = illégal
+                    - 2 = légal mais aucun résultat (annulé)
         """
 
+        if not self.is_legal_permutation(permutation):
+            return 1
+
         if self.mode == 3:
-            self.__tick_mode_3()
+            return self.__tick_mode_3(permutation)
+
+        raise TypeError("Not impplemented yet")
+
+# TODO : test_detecte_coordonnees_combinaison
 
 
 if __name__ == "__main__":
