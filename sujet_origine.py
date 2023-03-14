@@ -1,6 +1,9 @@
 """ Utilisation de ce module pour la génération aléatoire """
 from random import randint
 from math import log10
+import os
+import sys
+
 
 class Grille():
     """
@@ -44,7 +47,7 @@ class Grille():
         width = len(self.grille[0])
 
         for (i, slc) in enumerate(self.grille):
-            print(f"{height-i: >{int(log10(height))+3}} : "+" ".join([charset[e-1] for e in slc]))
+            print(f"{1+i: >{int(log10(height))+3}} : "+" ".join([charset[e-1] for e in slc]))
 
         print()
 
@@ -101,11 +104,16 @@ class Grille():
                 transposed (int[][]): La grille transposée
         """
 
+        print("\n-------\nTranposition:")
+        print("Start: "+str(self.grille))
+
         transposed = [[] for _i in range(len(self.grille[0]))]
 
         for ligne in self.grille:
             for (col_id, element) in enumerate(ligne):
                 transposed[col_id].append(element)
+
+        print("Transposée: "+str(transposed))
 
         return transposed
 
@@ -122,9 +130,14 @@ class Grille():
 
         self.grille = [[] for _i in range(len(transposed[0]))]
 
+        print("\n--------\nDétransposition:")
+        print("Transposée: "+str(transposed))
+
         for ligne in transposed:
             for (col_id, element) in enumerate(ligne):
                 self.grille[col_id].append(element)
+
+        print("Finale: "+str(self.grille))
 
 
 def explore_adj(_grille, pos_x, pos_y, scanned_value):
@@ -261,23 +274,28 @@ class Physique():
                 # [2, -1, 4, 5, -1, 6] -> [-1, -1, 2, 4, 5, 6]
                 while i > (n_occurences-1):
                     while line[i] == -1:
-                        new_line = [-1, *line[0:i], line[i:]]
+                        new_line = [-1, *line[0:i], *line[(i+1):]]
                         line = new_line
                     i -= 1
 
                 # Repopulate
-                i = 0
-                while i < len(line) and line[i] == -1:
-                    line[i] = self.grille.genere_case()
-                    i += 1
+
+                # This method doesnt work because of an index error on line[i]
+
+                # i = 0
+                # while i < len(line) and line[i] == -1:
+                #     line[i] = self.grille.genere_case()
+                #     i += 1
+
+                # This method works only if EVERY -1 has been displaced:
+                new_line = [self.grille.genere_case() if e == -1 else e for e in line]
+                line = new_line
 
             mutated_transposed.append(line)
 
         self.grille.from_transposed(mutated_transposed)
 
         return 0
-
-
 
     def __tick_mode_3(self, permutation):
         """
@@ -306,7 +324,6 @@ class Physique():
 
         return 0
 
-
     def is_legal_permutation(self, permutation):
         """
             is_legal_permutation: Indique si la permutation est légale d'un point de vue
@@ -325,7 +342,10 @@ class Physique():
                 return False
 
         distance_manhattan = abs(permutation[0][0] - permutation[1][0]) + \
-            abs(permutation[1][0] - permutation[1][1])
+            abs(permutation[0][1] - permutation[1][1])
+
+        print(f"Permutations: {permutation}")
+        print(f"Manhattan: {distance_manhattan}")
 
         return distance_manhattan == 1
 
@@ -354,16 +374,149 @@ class Physique():
 
         raise TypeError("Not impplemented yet")
 
+
+class GameManager():
+    """
+        Classe de gestion du jeu
+    """
+
+    def __init__(self):
+        self.grille = Grille()
+        self.physique = Physique(self.grille)
+
+    def ask_value(self, query="?", q_min=None, q_max=None):
+        """
+            ask_value: Demande une valeur numerique au joueur
+
+            Parametres:
+                query (str, optional): La demande (default: ?)
+                q_min (int, optional): Minimum (default: None)
+                q_max (int, optional): Maximum (default: None)
+
+            Renvoie
+                res (int): La valeur entrée par le joueur
+        """
+
+        res = None
+
+        while res is None:
+            raw_response = input(query)
+            try:
+                res = int(raw_response)
+            except ValueError:
+                print("Valeur incorrecte, veuillez entrer un entier")
+                res = None
+
+            if res is not None:
+                if q_min is not None:
+                    if res < q_min:
+                        res = None
+                        print(f"La valeur doit être au dessus de {q_min}")
+
+            if res is not None:
+                if q_max is not None:
+                    if res > q_max:
+                        res = None
+                        print(f"La valeur doit être en dessous de {q_max}")
+
+        return res
+
+
+    def ask_dimensions(self):
+        """
+            ask_dimensions: Premier écran, demande au joueur la taille de la grille
+
+            Parametres:
+                None
+
+            Return:
+                dimensions (tuple<int>): Les dimensions entrées
+        """
+        print(" *-*-*-* Bienvenue dans la version Terminal de Gandi Rush *-*-*-* ")
+        print(" -> Entrez une dimension de grille pour commencer:\n")
+
+        size_x = self.ask_value(query="Largeur? ", q_min=2, q_max=150)
+        size_y = self.ask_value(query="Hauteur? ", q_min=2, q_max=150)
+
+        return (size_x, size_y)
+
+    def os_clear(self):
+        """
+            os_clear: Efface le terminal pour plus de visibilité
+        """
+
+        # os.system('cls' if os.name == 'nt' else 'clear')
+
+    def main_loop(self):
+        """
+            main_loop: Boucle principale du jeu
+        """
+        while True:
+            self.os_clear()
+            print(" *-*-*-*-* GANDI RUN *-*-*-*-* \nAppuyez sur ctrl+c pour quitter\n\n")
+            self.grille.affiche_grille(charset=["-", "+", "*", "o"])
+            print("\n\n\n")
+            print("1=haut / 2=droite / 3=bas / 4=gauche\n")
+            print("Quelle coordonnées voulez vous permutter?")
+            permut_x = self.ask_value(query="x? ", q_min=0)
+            permut_y = self.ask_value(query="y? ", q_min=0)
+            direction = self.ask_value(query="direction? ", q_min=0, q_max=5)
+
+            permutation = [(permut_x-1, permut_y-1)]
+
+            other = (-1, -1)
+
+            if direction == 1:
+                other = (permut_x-1, permut_y-2)
+            elif direction == 2:
+                other = (permut_x, permut_y-1)
+            elif direction == 3:
+                other = (permut_x-1, permut_y)
+            elif direction == 4:
+                other = (permut_x-2, permut_y-1)
+
+            permutation.append(other)
+
+            result = self.physique.tick(permutation)
+
+            if result == 0:
+                pass
+            elif result == 1:
+                input("\n\nMouvement illégal. Pressez entrée pour continuer...")
+            elif result == 2:
+                input("\n\nMouvement inutile. Pressez entrée pour continer...")
+
+    def show_endgame(self):
+        """
+            show_endgame: Affiche l'écran de fin
+        """
+        self.os_clear()
+
+        print("\n\nMerci d'avoir joué à GANDI RUSH :)\n\n")
+
+    def run(self):
+        """
+            run: Point d'entrée du jeu
+        """
+
+        dimensions = self.ask_dimensions()
+        self.grille.genere_alea(dimensions[0], dimensions[1], 4)
+
+        self.physique.refresh_grid_info() # Lol
+
+        try:
+            self.main_loop()
+        except KeyboardInterrupt:
+            self.show_endgame()
+
+        sys.exit(0)
+
+
+
+
 # TODO : test_detecte_coordonnees_combinaison
 
 
 if __name__ == "__main__":
-    grid = Grille()
-
-    grid.genere_alea(5, 5, 4)
-    grid.affiche_grille(charset=["-", "+", "*", "o"])
-    print("\n")
-
-    _out = detecte_coordonnees_combinaison(grid, 2, 2)
-
-    print(_out)
+    game = GameManager()
+    game.run()
