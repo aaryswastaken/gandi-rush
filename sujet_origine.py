@@ -104,16 +104,11 @@ class Grille():
                 transposed (int[][]): La grille transposée
         """
 
-        print("\n-------\nTranposition:")
-        print("Start: "+str(self.grille))
-
         transposed = [[] for _i in range(len(self.grille[0]))]
 
         for ligne in self.grille:
             for (col_id, element) in enumerate(ligne):
                 transposed[col_id].append(element)
-
-        print("Transposée: "+str(transposed))
 
         return transposed
 
@@ -130,14 +125,9 @@ class Grille():
 
         self.grille = [[] for _i in range(len(transposed[0]))]
 
-        print("\n--------\nDétransposition:")
-        print("Transposée: "+str(transposed))
-
         for ligne in transposed:
             for (col_id, element) in enumerate(ligne):
                 self.grille[col_id].append(element)
-
-        print("Finale: "+str(self.grille))
 
     def clone(self):
         """
@@ -409,9 +399,6 @@ class Physique():
         distance_manhattan = abs(permutation[0][0] - permutation[1][0]) + \
             abs(permutation[0][1] - permutation[1][1])
 
-        print(f"Permutations: {permutation}")
-        print(f"Manhattan: {distance_manhattan}")
-
         return distance_manhattan == 1
 
     def tick(self, permutation):
@@ -510,7 +497,7 @@ class GameManager():
             os_clear: Efface le terminal pour plus de visibilité
         """
 
-        # os.system('cls' if os.name == 'nt' else 'clear')
+        os.system('cls' if os.name == 'nt' else 'clear')
 
     def main_loop(self):
         """
