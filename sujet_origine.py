@@ -30,7 +30,7 @@ class Grille():
         self.grille = [[randint(1, nb_max) for j in range(taille_y)] for i in range(taille_x)]
         self.nb_max = nb_max
 
-    def affiche_grille(self, charset=None):
+    def affiche_grille(self, charset=None, default_char=" "):
         """
             affiche_grille: Affiche la grille
 
@@ -44,11 +44,14 @@ class Grille():
         if charset is None:
             charset = [str(i+1) for i in range(self.nb_max)]
 
+        charset_len = len(charset)
+
         height = len(self.grille)
         width = len(self.grille[0])
 
         for (i, slc) in enumerate(self.grille):
-            print(f"{1+i: >{int(log10(height))+3}} : "+" ".join([charset[e-1] for e in slc]))
+            print(f"{1+i: >{int(log10(height))+3}} : "+" ".join(
+                [charset[e-1] if 0 < e <= charset_len else default_char for e in slc]))
 
         print()
 
@@ -351,22 +354,11 @@ class Physique():
 
         return 0
 
-    def __tick_mode_3(self, permutation, animation_tick):
+    def __refresh_mode_3(self, animation_tick=lambda: None):
         """
-            __tick_mode_3 (private): Wrapper pour __routine_tick_mode_3
+            __refresh_mode_3 (private): Routine de rafraichissement par le mode 3
         """
 
-        res = self.__routine_tick_mode_3(permutation)
-        if res != 0:
-            return res
-
-        animation_tick()
-
-        self.do_gravity()
-
-        animation_tick()
-
-        # Doit refresh toute la grille (doit opti)
         ancienne_grille = self.grille.clone()
         premiere = True
 
@@ -385,6 +377,27 @@ class Physique():
             animation_tick()
 
         return 0
+
+
+    def __tick_mode_3(self, permutation, animation_tick):
+        """
+            __tick_mode_3 (private): Wrapper pour __routine_tick_mode_3
+        """
+
+        res = self.__routine_tick_mode_3(permutation)
+        if res != 0:
+            return res
+
+        animation_tick()
+
+        self.do_gravity()
+
+        animation_tick()
+
+        # Doit refresh toute la grille (doit opti)
+        res = self.__refresh_mode_3(animation_tick)
+
+        return res
 
 
     def is_legal_permutation(self, permutation):
@@ -409,6 +422,23 @@ class Physique():
 
         return distance_manhattan == 1
 
+    def refresh(self, animation_tick=lambda: None):
+        """
+            refresh: Rafraichit la grille en faisant en boucle des opérations de
+                vérification de grille
+
+            Parametres:
+                animation_tick (function): Fonction à déclencher quand rafraichissement
+
+            Renvoie:
+                None
+        """
+
+        if self.mode == 3:
+            return self.__refresh_mode_3(animation_tick)
+
+        raise ValueError("Not implemented yet")
+
     def tick(self, permutation, animation_tick=lambda: None):
         """
             tick: Actualise la grille selon le mode de jeu
@@ -432,7 +462,7 @@ class Physique():
         if self.mode == 3:
             return self.__tick_mode_3(permutation, animation_tick)
 
-        raise TypeError("Not impplemented yet")
+        raise ValueError("Not impplemented yet")
 
 
 def ask_value(query="?", q_min=None, q_max=None):
@@ -584,7 +614,12 @@ class GameManager():
         dimensions = ask_dimensions()
         self.grille.genere_alea(dimensions[0], dimensions[1], 4)
 
+        print("\nGénération de la grille... (peut prendre du temps si la grille est grande)")
+
         self.physique.refresh_grid_info() # Lol
+        self.physique.refresh(animation_tick=lambda: None)
+
+        print("Grille générée ^^ \n")
 
         raw_do_anim = ask_value("\nVoulez-vous des animations?" + \
                 "\n (1=oui, 0=non)\n\n> ", q_min=-1, q_max=2)
