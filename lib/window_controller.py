@@ -95,8 +95,10 @@ class Fenetre_de_jeu(MenuPrincipal):
                     self.onFocus(i,j)
                 else:
                     self.grilledebas[i][j],self.grilledebas[self.focus[0]][self.focus[1]]=self.grilledebas[self.focus[0]][self.focus[1]],self.grilledebas[i][j]
+                    self.regenere([[i,j],[self.focus[0],self.focus[1]]])
+                    self.offFocus()
                     self.focus=(None,None)
-                    self.LancerJeu()
+
                 #print(f"je suis une gemme de type { {0:'Bleu',1:'Jaune',2:'Rouge',3:'Verte'}[v]} au coordonné {i} {j}")
         def onFocus(self,i,j):
             if j!=0 and j!=14 and i!=0 and j!=14:
@@ -112,6 +114,12 @@ class Fenetre_de_jeu(MenuPrincipal):
                 self.grille_element[i+1][j].config(bg="#73c2fa")
                 self.grille_element[i][j+1].config(bg="#73c2fa")
                 self.grille_element[i][j-1].config(bg="#73c2fa")
+        def regenere(self,l):
+            for i,j in l:
+                print(i,j)
+                self.grille_element[i][j].delete("nw")
+                self.grille_element[i][j].create_image(0, 0, image=sprite[self.grilledebas[i][j]], anchor="nw", tag="nw")
+
 def genere_alea(nb_max):
     return  [[randint(0,nb_max) for i in range(15)] for j in range(15)]
 fenetre=Window_Controller()
