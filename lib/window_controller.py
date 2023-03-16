@@ -58,7 +58,7 @@ class Fenetre_de_jeu(MenuPrincipal):
             sprite=[]
             self.focus = (None, None)
             self.grilledebas = genere_alea(3)
-            for i in ["PierreBleu","PierreJaune","PierreRouge","PierreVerte"]:
+            for i in ["PierreBleu","PierreJaune","PierreRouge","PierreVerte","animation_destruction"]:
                 sprite.append(ImageTk.PhotoImage(Image.open("../sprite/"+i+".png").resize((48, 48), Image.NEAREST)))
         def LancerJeu(self):
 
@@ -73,7 +73,6 @@ class Fenetre_de_jeu(MenuPrincipal):
                     tmp.create_image(0, 0, image=sprite[self.grilledebas[i][j]], anchor="nw", tag="nw")
                     tmp.grid(row=i+1,column=j+1,padx=1,pady=1)
                     tmp.bind("<Button-1>", lambda x,_i=i,_j=j: self.gemeclique(_i,_j,self.grilledebas[_i][_j]))
-
                     ligne_element.append(tmp)
                 self.grille_element.append(ligne_element)
 
@@ -101,7 +100,8 @@ class Fenetre_de_jeu(MenuPrincipal):
 
                 #print(f"je suis une gemme de type { {0:'Bleu',1:'Jaune',2:'Rouge',3:'Verte'}[v]} au coordonné {i} {j}")
         def onFocus(self,i,j):
-            if j!=0 and j!=14 and i!=0 and j!=14:
+            print(i, j)
+            if not(j in (0,14) or i in (0,14)):
                 self.grille_element[i-1][j].config(bg="#FFFFFF")
                 self.grille_element[i+1][j].config(bg="#FFFFFF")
                 self.grille_element[i][j+1].config(bg="#FFFFFF")
@@ -109,17 +109,22 @@ class Fenetre_de_jeu(MenuPrincipal):
         def offFocus(self):
             i=self.focus[0]
             j=self.focus[1]
-            if j!=0 and j!=14 and i!=0 and j!=14:
+            print(i,j)
+            if not(j in (0,14) or i in (0,14)):
                 self.grille_element[i-1][j].config(bg="#73c2fa")
                 self.grille_element[i+1][j].config(bg="#73c2fa")
                 self.grille_element[i][j+1].config(bg="#73c2fa")
                 self.grille_element[i][j-1].config(bg="#73c2fa")
+
         def regenere(self,l):
             for i,j in l:
                 print(i,j)
                 self.grille_element[i][j].delete("nw")
                 self.grille_element[i][j].create_image(0, 0, image=sprite[self.grilledebas[i][j]], anchor="nw", tag="nw")
-
+        def destroy(self,i,j):
+            print("Bbbbb")
+            self.grilledebas[i][j]=4
+            self.regenere([(i,j)])
 def genere_alea(nb_max):
     return  [[randint(0,nb_max) for i in range(15)] for j in range(15)]
 fenetre=Window_Controller()
