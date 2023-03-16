@@ -2,6 +2,7 @@
     This modules focuses on the event pool and its management
 """
 
+
 class EventPool():
     """
         The event pool is a FIFO stack
@@ -16,46 +17,46 @@ class EventPool():
         self.priority_id = []
         self.listener = []
 
-    def next(self):
+    def next(self, dest):
         """
             Returns next event to treat
 
             Parameters:
-                None
+                dest (int): The destination of the message
 
             Returns:
                 event (PooledEvent): The next event
         """
 
-    def next_and_delete(self):
+    def next_and_delete(self, dest):
         """
             Returns next event and deletes it from the stack
 
             Parameters:
-                None
+                dest (int): The destination of the message
 
             Returns:
                 event (PooledEvent): The next event
         """
 
-    def next_priority(self):
+    def next_priority(self, dest):
         """
             Returns the next event flagged as important
 
             Parameters:
-                None
+                dest (int); The destination of the message
 
             Returns:
                 event (PooledEvent): The next event
         """
 
-    def next_priority_and_delete(self):
+    def next_priority_and_delete(self, dest):
         """
             Returns the next event flagged as important and deletes
                 it from the stack
 
             Parameters:
-                None
+                dest (int): The destination of the message
 
             Returns:
                 event (PooledEvent): The next event
@@ -142,8 +143,68 @@ class Event():
         This class defines an event and its methods and its methods
     """
 
+    def __init__(self, dest, msg_type, payload):
+        self.dest = dest
+        self.msg_type = msg_type
+        self.payload = payload
+
+    def get_dest(self):
+        """
+            Returns the destination
+        """
+
+        return self.dest
+
+    def update_payload(self, new_payload):
+        """
+            Updates the payload
+        """
+
+        self.payload = new_payload
+
+    def clone(self):
+        """
+            Clones itself
+        """
+
+        clone = Event(self.dest, self.msg_type, self.payload)
+        return clone
+
+    def derive_pooled_event(self):
+        """
+            Derives the pooled event from the event
+        """
+
+        return PooledEvent.from_event(self)
+
 class PooledEvent(Event):
     """
         This class defines a Pooled Event (just an event + a pool id)
     """
 
+    def __init__(self, dest, mt, pl, eid):
+        super().__init__(dest, mt, pl)
+        self.pe_id = eid
+        self.flag = 0
+
+    @staticmethod
+    def from_event(event):
+        """
+            Derives a PooledEvent from an Event (poor implementation)
+        """
+
+        return super().__init__(event.dest, event.msg_type, event.payload)
+
+    def set_flag(self, f_level=0):
+        """
+            Set flag
+        """
+
+        self.flag = f_level
+
+    def set_id(self, eid):
+        """
+            Set event id
+        """
+
+        self.pe_id = eid
