@@ -38,6 +38,29 @@ class EventPool():
                 event (PooledEvent): The next event
         """
 
+    def next_priority(self):
+        """
+            Returns the next event flagged as important
+
+            Parameters:
+                None
+
+            Returns:
+                event (PooledEvent): The next event
+        """
+
+    def next_priority_and_delete(self):
+        """
+            Returns the next event flagged as important and deletes
+                it from the stack
+
+            Parameters:
+                None
+
+            Returns:
+                event (PooledEvent): The next event
+        """
+
     def push(self, event):
         """
             Pushes an event to the stack
