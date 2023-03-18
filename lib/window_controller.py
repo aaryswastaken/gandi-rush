@@ -8,7 +8,7 @@ class WindowController(Tk):
     """
     def __init__(self):
         super().__init__()
-        self["bg"]="#73c2fa"
+        self["bg"] = "#73c2fa"
         self.geometry("1200x800")
         self.resizable(width=False, height=False)
 
@@ -17,9 +17,9 @@ class MenuPrincipal:
     """
     Décrit le menu principal
     """
-    def __init__(self,root):
-        self.root=root
-        root.columnconfigure(0,weight=1)
+    def __init__(self , root):
+        self.root = root
+        root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
         root.rowconfigure(1, weight=1)
         # Logo
@@ -40,25 +40,25 @@ class MenuPrincipal:
         self.bouton.focus_set()
         self.logo.grid(row=0, column=0, sticky="n")
         self.bouton.grid(row=1, column=0, sticky="")
-    def enter_bouton(self,_):
+    def enter_bouton(self, _):
         """
     Animation d'entrer de la souris pour le bouton
         """
         self.bouton.delete("IMG")
-        self.bouton.create_image(0, 0, image=self.image_bouton2,anchor="nw",tag="IMG")
-    def leave_bouton(self,_):
+        self.bouton.create_image(0, 0, image=self.image_bouton2,anchor="nw", tag="IMG")
+    def leave_bouton(self, _):
         """
       Animation de sortie de la souris pour le bouton
                 """
         self.bouton.delete("IMG")
         self.bouton.create_image(0, 0, image=self.image_bouton1, anchor="nw", tag="IMG")
-    def leave_menu(self,_):
+    def leave_menu(self, _):
         """
         Fonction lancé pour détruire les éléments du menu
         """
         self.bouton.destroy()
         self.logo.destroy()
-    def bouton_jouer_click(self,_):
+    def bouton_jouer_click(self, _):
         """
         Lancement du jeu, fermeture du menu
         """
@@ -74,14 +74,14 @@ class FenetreDeJeu():
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=0)
         root.rowconfigure(1, weight=0)
-        root.columnconfigure(16,weight=1)
+        root.columnconfigure(16, weight=1)
         self.root=root
         self.grille_element = []
         global SPRITE
-        SPRITE=[]
+        SPRITE = []
         self.focus = (None, None)
         self.grilledebas = genere_alea(3)
-        for i in ["PierreBleu","PierreJaune","PierreRouge","PierreVerte","animation_destruction"]:
+        for i in ["PierreBleu", "PierreJaune", "PierreRouge", "PierreVerte", "animation_destruction"]:
             SPRITE.append(ImageTk.PhotoImage(Image.open("../sprite/"+i+".png").resize((48, 48), Image.NEAREST)))
     def lancer_jeu(self):
         """
@@ -89,12 +89,12 @@ class FenetreDeJeu():
         """
         self.root.bind("<Button-3>", lambda x: self.backgroundclick())
         for i in range(len(self.grilledebas)):
-            ligne_element=[]
+            ligne_element = []
             for j in range(len(self.grilledebas[0])):
-                tmp=Canvas( height=50, width=50, bd=0, highlightthickness=0,bg="#73c2fa")
+                tmp = Canvas( height=50, width=50, bd=0, highlightthickness=0,bg="#73c2fa")
                 tmp.create_image(0, 0, image=SPRITE[self.grilledebas[i][j]], anchor="nw", tag="nw")
-                tmp.grid(row=i+1,column=j+1,padx=1,pady=1)
-                tmp.bind("<Button-1>", lambda x,_i=i,_j=j: self.gemeclique(_i,_j,self.grilledebas[_i][_j]))
+                tmp.grid(row=i+1, column=j+1, padx=1, pady=1)
+                tmp.bind("<Button-1>", lambda x, _i=i, _j=j: self.gemeclique(_i, _j, self.grilledebas[_i][_j]))
                 ligne_element.append(tmp)
             self.grille_element.append(ligne_element)
 
@@ -102,41 +102,41 @@ class FenetreDeJeu():
         """
         Evenement si un clique hors grille est réalisé
         """
-        if self.focus!=(None,None):
+        if self.focus != (None,None):
             self.off_focus()
             self.focus = (None, None)
 
-    def gemeclique(self,i,j,value):
+    def gemeclique(self, i, j, value):
         """
         Evenement si une gemme est cliqué
         """
-        if self.focus==(None,None):
+        if self.focus == (None,None):
             self.focus = (i, j)
             self.on_focus(i, j)
-        elif (i-self.focus[0])**2+(j-self.focus[1])**2!=1:
+        elif (i-self.focus[0])**2+(j-self.focus[1])**2 != 1:
             self.off_focus()
-            self.focus=(i,j)
-            self.on_focus(i,j)
+            self.focus = (i, j)
+            self.on_focus(i, j)
         else:
-            self.grilledebas[i][j],self.grilledebas[self.focus[0]][self.focus[1]]=self.grilledebas[self.focus[0]][self.focus[1]],self.grilledebas[i][j]
-            self.regenere([[i,j],[self.focus[0],self.focus[1]]])
+            self.grilledebas[i][j], self.grilledebas[self.focus[0]][self.focus[1]] = self.grilledebas[self.focus[0]][self.focus[1]], self.grilledebas[i][j]
+            self.regenere([[i, j], [self.focus[0], self.focus[1]]])
             self.off_focus()
-            self.focus=(None,None)
+            self.focus = (None, None)
 
         print(f"je suis une gemme de type { {0:'Bleu',1:'Jaune',2:'Rouge',3:'Verte'}[value]} au coordonné {i} {j}")
-    def on_focus(self,i,j):
+    def on_focus(self, i, j):
         """Cette fonction va être suprimé, source: TKT"""
-        if not(j in (0,14) or i in (0,14)):
+        if not(j in (0, 14) or i in (0, 14)):
             self.grille_element[i-1][j].config(bg="#FFFFFF")
             self.grille_element[i+1][j].config(bg="#FFFFFF")
             self.grille_element[i][j+1].config(bg="#FFFFFF")
             self.grille_element[i][j-1].config(bg="#FFFFFF")
     def off_focus(self):
         """Cette fonction va être suprimé, source: TKT"""
-        i=self.focus[0]
-        j=self.focus[1]
-        print(i,j)
-        if not(j in (0,14) or i in (0,14)):
+        i = self.focus[0]
+        j = self.focus[1]
+        print(i, j)
+        if not(j in (0, 14) or i in (0, 14)):
             self.grille_element[i-1][j].config(bg="#73c2fa")
             self.grille_element[i+1][j].config(bg="#73c2fa")
             self.grille_element[i][j+1].config(bg="#73c2fa")
@@ -151,18 +151,18 @@ class FenetreDeJeu():
         for i,j in liste_pos:
             self.grille_element[i][j].delete("nw")
             self.grille_element[i][j].create_image(0, 0, image=SPRITE[self.grilledebas[i][j]], anchor="nw", tag="nw")
-    def destroy(self,i,j):
+    def destroy(self, i, j):
         """
 
         Permet de detruire une case aux coordonnées i,j
         """
-        self.grilledebas[i][j]=4
-        self.regenere([(i,j)])
+        self.grilledebas[i][j] = 4
+        self.regenere([(i, j)])
 def genere_alea(nb_max):
     """
     Fonction temporaire
     """
-    return  [[randint(0,nb_max) for i in range(15)] for j in range(15)]
-fenetre=WindowController()
-menu=MenuPrincipal(fenetre)
+    return [[randint(0,nb_max) for i in range(15)] for j in range(15)]
+fenetre = WindowController()
+menu = MenuPrincipal(fenetre)
 menu.root.mainloop()
