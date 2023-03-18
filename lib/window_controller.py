@@ -45,7 +45,7 @@ class MenuPrincipal:
     Animation d'entrer de la souris pour le bouton
         """
         self.bouton.delete("IMG")
-        self.bouton.create_image(0, 0, image=self.image_bouton2,anchor="nw", tag="IMG")
+        self.bouton.create_image(0, 0, image=self.image_bouton2, anchor="nw", tag="IMG")
     def leave_bouton(self, _):
         """
       Animation de sortie de la souris pour le bouton
@@ -75,7 +75,7 @@ class FenetreDeJeu():
         root.rowconfigure(0, weight=0)
         root.rowconfigure(1, weight=0)
         root.columnconfigure(16, weight=1)
-        self.root=root
+        self.root = root
         self.grille_element = []
         global SPRITE
         SPRITE = []
@@ -102,7 +102,7 @@ class FenetreDeJeu():
         """
         Evenement si un clique hors grille est réalisé
         """
-        if self.focus != (None,None):
+        if self.focus != (None, None):
             self.off_focus()
             self.focus = (None, None)
 
@@ -110,7 +110,7 @@ class FenetreDeJeu():
         """
         Evenement si une gemme est cliqué
         """
-        if self.focus == (None,None):
+        if self.focus == (None, None):
             self.focus = (i, j)
             self.on_focus(i, j)
         elif (i-self.focus[0])**2+(j-self.focus[1])**2 != 1:
@@ -142,13 +142,13 @@ class FenetreDeJeu():
             self.grille_element[i][j+1].config(bg="#73c2fa")
             self.grille_element[i][j-1].config(bg="#73c2fa")
 
-    def regenere(self,liste_pos):
+    def regenere(self, liste_pos):
         """
 
         Liste de coordonné à actualiser ((1,2)(3,4))...
         Actualise les visuelles par rapport à la liste
         """
-        for i,j in liste_pos:
+        for i, j in liste_pos:
             self.grille_element[i][j].delete("nw")
             self.grille_element[i][j].create_image(0, 0, image=SPRITE[self.grilledebas[i][j]], anchor="nw", tag="nw")
     def destroy(self, i, j):
@@ -162,7 +162,7 @@ def genere_alea(nb_max):
     """
     Fonction temporaire
     """
-    return [[randint(0,nb_max) for i in range(15)] for j in range(15)]
-fenetre = WindowController()
-menu = MenuPrincipal(fenetre)
+    return [[randint(0, nb_max) for i in range(15)] for j in range(15)]
+Fenetre = WindowController()
+menu = MenuPrincipal(Fenetre)
 menu.root.mainloop()
