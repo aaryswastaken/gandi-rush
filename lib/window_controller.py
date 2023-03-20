@@ -17,7 +17,7 @@ def load_sprites():
 
     for i in ["PierreBleu", "PierreJaune", "PierreRouge", "PierreVerte", "animation_destruction"]:
         SPRITE.append(ImageTk.PhotoImage(Image.open("../sprite/"+i+".png")
-                                            .resize((48, 48), Image.NEAREST)))
+                                         .resize((48, 48), Image.NEAREST)))
 
 
 class WindowController(Tk):
@@ -36,6 +36,7 @@ class MenuPrincipal:
     Décrit le menu principal
     """
 
+    # Because this class manages tkinter things
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self , root):
@@ -52,9 +53,9 @@ class MenuPrincipal:
         self.original_bouton1 = Image.open("../sprite/Bouton1.png")
         self.original_bouton2 = Image.open("../sprite/Bouton2.png")
         self.image_bouton1 = ImageTk.PhotoImage(self.original_bouton1.resize((400, 200),
-                                                    Image.NEAREST))
+                                                                             Image.NEAREST))
         self.image_bouton2 = ImageTk.PhotoImage(self.original_bouton2.resize((400, 200),
-                                                    Image.NEAREST))
+                                                                             Image.NEAREST))
         self.bouton = Canvas(root, height=200, width=400, borderwidth=0, highlightthickness=0)
         self.bouton.create_image(0, 0, image=self.image_bouton1, anchor="nw", tag="IMG")
         self.bouton.bind("<Enter>", self.enter_bouton)
