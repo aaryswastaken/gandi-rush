@@ -1,5 +1,8 @@
 """
     This modules focuses on the grid management
+
+    Author: @aaryswastaken
+    Created Date: 03/13/2023
 """
 
 # Importing modules for the GridManager Thread

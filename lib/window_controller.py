@@ -1,5 +1,8 @@
 """
     This module is managing the window and its animations
+
+    Author: @Byllie, @aaryswastaken
+    Created Date: 03/14/2023
 """
 
 from __future__ import absolute_import

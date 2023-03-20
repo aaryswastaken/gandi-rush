@@ -1,5 +1,8 @@
 """
     This modules focuses on the event pool and its management
+
+    Author: @aaryswastaken
+    Created Date: 03/16/2023
 """
 
 

@@ -1,4 +1,10 @@
-""" Import des modules """
+"""
+    Ce fichier complete le niveau 3 demandé
+
+    Authors: @aaryswastaken
+    Created Date: 03/14/2023
+"""
+
 from random import randint
 from math import log10
 import os
