@@ -163,6 +163,7 @@ def genere_alea(nb_max):
     Fonction temporaire
     """
     return [[randint(0, nb_max) for i in range(15)] for j in range(15)]
-Fenetre = WindowController()
-menu = MenuPrincipal(Fenetre)
-menu.root.mainloop()
+if __name__ == "__main__":
+    Fenetre = WindowController()
+    menu = MenuPrincipal(Fenetre)
+    menu.root.mainloop()
