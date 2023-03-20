@@ -125,7 +125,8 @@ class FenetreDeJeu():
             ligne_element = []
             for j in range(len(self.grille_de_base[0])):
                 tmp = Canvas(height=50, width=50, bd=0, highlightthickness=0, bg="#73c2fa")
-                tmp.create_image(0, 0, image=SPRITE[self.grille_de_base[i][j]], anchor="nw", tag="nw")
+                tmp.create_image(0, 0, image=SPRITE[self.grille_de_base[i][j]],
+                                 anchor="nw", tag="nw")
                 tmp.grid(row=i+1, column=j+1, padx=1, pady=1)
                 tmp.bind("<Button-1>", lambda x, _i=i, _j=j:
                          self.gemeclique(_i, _j, self.grille_de_base[_i][_j]))
