@@ -5,6 +5,7 @@
     Created Date: 03/14/2023
 """
 
+from __future__ import absolute_import
 from random import randint
 from math import log10
 import os
@@ -335,10 +336,10 @@ class Physique():
             # Permutations
             self.grille.permute(permutation)
 
-            to_delete0 = detecte_coordonnees_combinaison(self.grille, permutation[0][0],
-                            permutation[0][1])
-            to_delete1 = detecte_coordonnees_combinaison(self.grille, permutation[1][0],
-                            permutation[1][1])
+            to_delete0 = detecte_coordonnees_combinaison(self.grille,
+                                                         permutation[0][0], permutation[0][1])
+            to_delete1 = detecte_coordonnees_combinaison(self.grille,
+                                                         permutation[1][0], permutation[1][1])
 
             if len(to_delete0) < 3 and len(to_delete1) < 3:
                 # Pas possible
@@ -349,9 +350,9 @@ class Physique():
         else:
             # Utilisé dans le check global pour le refresh de la grille
             to_delete_array = [
-                    detecte_coordonnees_combinaison(self.grille, permutation[0][0],
-                            permutation[0][1])
-                    ]
+                detecte_coordonnees_combinaison(self.grille, permutation[0][0],
+                                                permutation[0][1])
+            ]
 
         for to_delete in to_delete_array:
             if len(to_delete) >= 3:
@@ -600,9 +601,9 @@ class GameManager():
             permutation.append(other)
 
             result = self.physique.tick(permutation,
-                    animation_tick=
-                        (lambda: self.print_grid(delay=self.animation_period))
-                        if self.do_animation else (lambda: None))
+                                        animation_tick= (lambda: self.print_grid(
+                                            delay=self.animation_period)) if self.do_animation
+                                        else (lambda: None))
 
             if result == 0:
                 pass
@@ -648,10 +649,10 @@ def test_detecte_coordonnees_combinaison():
 
     raw_grilles = [
         [[1]],
-        [ [0, 0, 0], [0, 1, 0], [0, 0, 0] ],
-        [ [0, 0, 0], [0, 1, 0], [0, 0, 0] ],
-        [ [1, 1, 1], [1, 0, 0], [1, 1, 0] ],
-        [ [1, 1, 1], [1, 0, 0], [1, 1, 0] ],
+        [[0, 0, 0], [0, 1, 0], [0, 0, 0]],
+        [[0, 0, 0], [0, 1, 0], [0, 0, 0]],
+        [[1, 1, 1], [1, 0, 0], [1, 1, 0]],
+        [[1, 1, 1], [1, 0, 0], [1, 1, 0]],
     ]
 
     all_expected = [
@@ -695,5 +696,5 @@ if __name__ == "__main__":
     if "--test" in sys.argv:
         test_detecte_coordonnees_combinaison()
     else:
-        game = GameManager()
-        game.run()
+        GAME = GameManager()
+        GAME.run()
