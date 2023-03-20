@@ -3,6 +3,7 @@
 """
 
 # Importing modules for the GridManager Thread
+from __future__ import absolute_import
 from threading import Thread
 
 
