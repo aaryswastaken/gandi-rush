@@ -183,10 +183,10 @@ class FenetreDeJeu():
         j = self.focus[1]
         print(i, j)
         if not(j in (0, 14) or i in (0, 14)):
-            self.grille_element[i-1][j].config(bg="#73c2fa")
-            self.grille_element[i+1][j].config(bg="#73c2fa")
-            self.grille_element[i][int(j+1)].config(bg="#73c2fa")
-            self.grille_element[i][int(j-1)].config(bg="#73c2fa")
+            self.grille_element[int(i-1)][int(j)].config(bg="#73c2fa")
+            self.grille_element[int(i+1)][int(j)].config(bg="#73c2fa")
+            self.grille_element[int(i)][int(j+1)].config(bg="#73c2fa")
+            self.grille_element[int(i)][int(j-1)].config(bg="#73c2fa")
 
     def regenere(self, liste_pos):
         """
@@ -215,6 +215,6 @@ def genere_alea(nb_max):
     return [[randint(0, nb_max) for i in range(15)] for j in range(15)]
 
 if __name__ == "__main__":
-    Fenetre = WindowController()
-    menu = MenuPrincipal(Fenetre)
+    fenetre = WindowController()
+    menu = MenuPrincipal(fenetre)
     menu.root.mainloop()
