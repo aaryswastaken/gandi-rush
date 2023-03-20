@@ -601,7 +601,7 @@ class GameManager():
             permutation.append(other)
 
             result = self.physique.tick(permutation,
-                                        animation_tick= (lambda: self.print_grid(
+                                        animation_tick=(lambda: self.print_grid(
                                             delay=self.animation_period)) if self.do_animation
                                         else (lambda: None))
 
