@@ -39,7 +39,7 @@ class MenuPrincipal:
     # Because this class manages tkinter things
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self , root):
+    def __init__(self, root):
         self.root = root
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
@@ -103,7 +103,7 @@ class FenetreDeJeu():
     Decris la fenêtre de jeu
     """
 
-    def __init__(self,root):
+    def __init__(self, root):
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=0)
         root.rowconfigure(1, weight=0)
@@ -124,11 +124,11 @@ class FenetreDeJeu():
         for (i, _element) in enumerate(self.grilledebas):
             ligne_element = []
             for j in range(len(self.grilledebas[0])):
-                tmp = Canvas( height=50, width=50, bd=0, highlightthickness=0,bg="#73c2fa")
+                tmp = Canvas(height=50, width=50, bd=0, highlightthickness=0, bg="#73c2fa")
                 tmp.create_image(0, 0, image=SPRITE[self.grilledebas[i][j]], anchor="nw", tag="nw")
                 tmp.grid(row=i+1, column=j+1, padx=1, pady=1)
-                tmp.bind("<Button-1>", lambda x, _i=i, _j=j: self.gemeclique(_i, _j,
-                                                                    self.grilledebas[_i][_j]))
+                tmp.bind("<Button-1>", lambda x, _i=i, _j=j:
+                         self.gemeclique(_i, _j, self.grilledebas[_i][_j]))
                 ligne_element.append(tmp)
             self.grille_element.append(ligne_element)
 
@@ -185,8 +185,8 @@ class FenetreDeJeu():
         if not(j in (0, 14) or i in (0, 14)):
             self.grille_element[i-1][j].config(bg="#73c2fa")
             self.grille_element[i+1][j].config(bg="#73c2fa")
-            self.grille_element[i][j+1].config(bg="#73c2fa")
-            self.grille_element[i][j-1].config(bg="#73c2fa")
+            self.grille_element[i][int(j+1)].config(bg="#73c2fa")
+            self.grille_element[i][int(j-1)].config(bg="#73c2fa")
 
     def regenere(self, liste_pos):
         """
@@ -207,11 +207,13 @@ class FenetreDeJeu():
         self.grilledebas[i][j] = 4
         self.regenere([(i, j)])
 
+
 def genere_alea(nb_max):
     """
     Fonction temporaire
     """
     return [[randint(0, nb_max) for i in range(15)] for j in range(15)]
+
 if __name__ == "__main__":
     Fenetre = WindowController()
     menu = MenuPrincipal(Fenetre)
