@@ -111,7 +111,7 @@ class FenetreDeJeu():
         self.root = root
         self.grille_element = []
         self.focus = (None, None)
-        self.grilledebas = genere_alea(3)
+        self.grille_de_base = genere_alea(3)
 
         load_sprites()
 
@@ -121,14 +121,14 @@ class FenetreDeJeu():
         """
 
         self.root.bind("<Button-3>", lambda x: self.backgroundclick())
-        for (i, _element) in enumerate(self.grilledebas):
+        for (i, _element) in enumerate(self.grille_de_base):
             ligne_element = []
-            for j in range(len(self.grilledebas[0])):
+            for j in range(len(self.grille_de_base[0])):
                 tmp = Canvas(height=50, width=50, bd=0, highlightthickness=0, bg="#73c2fa")
-                tmp.create_image(0, 0, image=SPRITE[self.grilledebas[i][j]], anchor="nw", tag="nw")
+                tmp.create_image(0, 0, image=SPRITE[self.grille_de_base[i][j]], anchor="nw", tag="nw")
                 tmp.grid(row=i+1, column=j+1, padx=1, pady=1)
                 tmp.bind("<Button-1>", lambda x, _i=i, _j=j:
-                         self.gemeclique(_i, _j, self.grilledebas[_i][_j]))
+                         self.gemeclique(_i, _j, self.grille_de_base[_i][_j]))
                 ligne_element.append(tmp)
             self.grille_element.append(ligne_element)
 
@@ -154,8 +154,8 @@ class FenetreDeJeu():
             self.focus = (i, j)
             self.on_focus(i, j)
         else:
-            self.grilledebas[i][j], self.grilledebas[self.focus[0]][self.focus[1]] = \
-                    self.grilledebas[self.focus[0]][self.focus[1]], self.grilledebas[i][j]
+            self.grille_de_base[i][j], self.grille_de_base[self.focus[0]][self.focus[1]] = \
+                    self.grille_de_base[self.focus[0]][self.focus[1]], self.grille_de_base[i][j]
             self.regenere([[i, j], [self.focus[0], self.focus[1]]])
             self.off_focus()
             self.focus = (None, None)
@@ -196,7 +196,7 @@ class FenetreDeJeu():
 
         for i, j in liste_pos:
             self.grille_element[i][j].delete("nw")
-            self.grille_element[i][j].create_image(0, 0, image=SPRITE[self.grilledebas[i][j]],
+            self.grille_element[i][j].create_image(0, 0, image=SPRITE[self.grille_de_base[i][j]],
                                                    anchor="nw", tag="nw")
 
     def destroy(self, i, j):
@@ -204,7 +204,7 @@ class FenetreDeJeu():
             Permet de detruire une case aux coordonnées i,j
         """
 
-        self.grilledebas[i][j] = 4
+        self.grille_de_base[i][j] = 4
         self.regenere([(i, j)])
 
 
@@ -215,6 +215,6 @@ def genere_alea(nb_max):
     return [[randint(0, nb_max) for i in range(15)] for j in range(15)]
 
 if __name__ == "__main__":
-    fenetre = WindowController()
-    menu = MenuPrincipal(fenetre)
-    menu.root.mainloop()
+    FENETRE = WindowController()
+    MENU = MenuPrincipal(FENETRE)
+    MENU.root.mainloop()
