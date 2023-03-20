@@ -14,7 +14,6 @@ class EventPool():
         """
 
         self.stack = []
-        self.priority_id = []
         self.listener = []
 
     def next(self, dest):
@@ -159,6 +158,14 @@ class EventPool():
                 id (int): The listener id
         """
 
+        if scope is None:
+            scope = 0
+
+        # SHOULD REPLACE BY A RegisteredListener Class
+        self.listener.append({"l": listener, "scope": scope, "active": True})
+
+        return len(self.listener)
+
     def unregister_listener(self, listener_id):
         """
             Removes the listener from the listener list (shouldn't be usable)
@@ -169,6 +176,8 @@ class EventPool():
             Returns:
                 None
         """
+
+        self.listener[listener_id].active = False
 
     def remove_event(self, event):
         """
@@ -181,6 +190,17 @@ class EventPool():
                 success (boolean)
         """
 
+        i = 0
+        res = False
+
+        while i < len(self.stack) and not res:
+            if self.stack[i].pid == event.pid:
+                self.stack.pop(i)
+                res = True
+            i += 1
+
+        return res
+
     def remove_event_from_stack_id(self, event_id):
         """
             Removes the event with the corresponding pool id
@@ -191,6 +211,17 @@ class EventPool():
             Returns:
                 success (bolean)
         """
+
+        i = 0
+        res = False
+
+        while i < len(self.stack) and not res:
+            if self.stack[i].pid == event_id:
+                self.stack.pop(i)
+                res = True
+            i += 1
+
+        return res
 
 
 class Event():
