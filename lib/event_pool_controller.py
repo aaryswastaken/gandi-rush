@@ -28,6 +28,16 @@ class EventPool():
                 event (PooledEvent): The next event
         """
 
+        i = 0
+        out = None
+
+        while i < len(self.stack) and out is None:
+            if self.stack[i].dest == dest:
+                out = self.stack[i]
+            i += 1
+
+        return out
+
     def next_and_delete(self, dest):
         """
             Returns next event and deletes it from the stack
@@ -39,6 +49,16 @@ class EventPool():
                 event (PooledEvent): The next event
         """
 
+        i = 0
+        out = None
+
+        while i < len(self.stack) and out is None:
+            if self.stack[i].dest == dest:
+                out = self.stack.pop(i)
+            i += 1
+
+        return out
+
     def next_priority(self, dest):
         """
             Returns the next event flagged as important
@@ -49,6 +69,16 @@ class EventPool():
             Returns:
                 event (PooledEvent): The next event
         """
+
+        i = 0
+        out = None
+
+        while i < len(self.stack) and out is None:
+            if self.stack[i].flag == 1 and self.stack[i].dest == dest:
+                out = self.stack[i]
+            i += 1
+
+        return out
 
     def next_priority_and_delete(self, dest):
         """
@@ -62,6 +92,16 @@ class EventPool():
                 event (PooledEvent): The next event
         """
 
+        i = 0
+        out = None
+
+        while i < len(self.stack) and out is None:
+            if self.stack[i].flag == 1 and self.stack[i].dest == dest:
+                out = self.stack.pop(i)
+            i += 1
+
+        return out
+
     def push(self, event):
         """
             Pushes an event to the stack
@@ -73,6 +113,13 @@ class EventPool():
                 id (int): PooledEvent id
         """
 
+        pid = len(self.stack) + 1
+        pooled_event = event.derive_pooled_event(pid)
+
+        self.stack.append(pooled_event)
+
+        return pid
+
     def push_priority(self, event):
         """
             Pushed an important event
@@ -83,6 +130,14 @@ class EventPool():
             Returns:
                 id (int): PooledEvent id
         """
+
+        pid = len(self.stack) + 1
+        pooled_event = event.derive_pooled_event()
+        pooled_event.flag = 1
+
+        self.stack.append(pooled_event)
+
+        return pid
 
     def register_listener(self, listener, scope=None):
         """
@@ -148,7 +203,11 @@ class Event():
     TYPE_SCORE_UPDATE = 4   # Updates the score
 
     def __init__(self, dest, msg_type, payload):
+        # 0: ui -> grid manager
+        # 1: grid manager -> ui
+        # 2: grid manager -> grid creator (probably not used)
         self.dest = dest
+
         self.msg_type = msg_type
         self.payload = payload
 
@@ -174,30 +233,30 @@ class Event():
         clone = Event(self.dest, self.msg_type, self.payload)
         return clone
 
-    def derive_pooled_event(self):
+    def derive_pooled_event(self, pid):
         """
             Derives the pooled event from the event
         """
 
-        return PooledEvent.from_event(self)
+        return PooledEvent.from_event(self, pid)
 
 class PooledEvent(Event):
     """
         This class defines a Pooled Event (just an event + a pool id)
     """
 
-    def __init__(self, dest, mt, pl, eid):
+    def __init__(self, dest, mt, pl, pid):
         super().__init__(dest, mt, pl)
-        self.pe_id = eid
+        self.pe_id = pid
         self.flag = 0
 
     @staticmethod
-    def from_event(event):
+    def from_event(event, pid):
         """
             Derives a PooledEvent from an Event (poor implementation)
         """
 
-        return super().__init__(event.dest, event.msg_type, event.payload)
+        return PooledEvent(event.dest, event.msg_type, event.payload, pid)
 
     def set_flag(self, f_level=0):
         """
