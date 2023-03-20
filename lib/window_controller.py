@@ -40,30 +40,35 @@ class MenuPrincipal:
         self.bouton.focus_set()
         self.logo.grid(row=0, column=0, sticky="n")
         self.bouton.grid(row=1, column=0, sticky="")
+
     def enter_bouton(self, _):
         """
     Animation d'entrer de la souris pour le bouton
         """
         self.bouton.delete("IMG")
         self.bouton.create_image(0, 0, image=self.image_bouton2, anchor="nw", tag="IMG")
+
     def leave_bouton(self, _):
         """
       Animation de sortie de la souris pour le bouton
                 """
         self.bouton.delete("IMG")
         self.bouton.create_image(0, 0, image=self.image_bouton1, anchor="nw", tag="IMG")
+
     def leave_menu(self, _):
         """
         Fonction lancé pour détruire les éléments du menu
         """
         self.bouton.destroy()
         self.logo.destroy()
+
     def bouton_jouer_click(self, _):
         """
         Lancement du jeu, fermeture du menu
         """
         self.leave_menu(None)
         FenetreDeJeu(self.root).lancer_jeu()
+
 
 class FenetreDeJeu():
 
@@ -83,6 +88,7 @@ class FenetreDeJeu():
         self.grilledebas = genere_alea(3)
         for i in ["PierreBleu", "PierreJaune", "PierreRouge", "PierreVerte", "animation_destruction"]:
             SPRITE.append(ImageTk.PhotoImage(Image.open("../sprite/"+i+".png").resize((48, 48), Image.NEAREST)))
+
     def lancer_jeu(self):
         """
         Initialise le jeu
@@ -124,6 +130,7 @@ class FenetreDeJeu():
             self.focus = (None, None)
 
         print(f"je suis une gemme de type { {0:'Bleu',1:'Jaune',2:'Rouge',3:'Verte'}[value]} au coordonné {i} {j}")
+
     def on_focus(self, i, j):
         """Cette fonction va être suprimé, source: TKT"""
         if not(j in (0, 14) or i in (0, 14)):
@@ -131,6 +138,7 @@ class FenetreDeJeu():
             self.grille_element[i+1][j].config(bg="#FFFFFF")
             self.grille_element[i][j+1].config(bg="#FFFFFF")
             self.grille_element[i][j-1].config(bg="#FFFFFF")
+
     def off_focus(self):
         """Cette fonction va être suprimé, source: TKT"""
         i = self.focus[0]
@@ -151,6 +159,7 @@ class FenetreDeJeu():
         for i, j in liste_pos:
             self.grille_element[i][j].delete("nw")
             self.grille_element[i][j].create_image(0, 0, image=SPRITE[self.grilledebas[i][j]], anchor="nw", tag="nw")
+
     def destroy(self, i, j):
         """
 
@@ -158,6 +167,7 @@ class FenetreDeJeu():
         """
         self.grilledebas[i][j] = 4
         self.regenere([(i, j)])
+
 def genere_alea(nb_max):
     """
     Fonction temporaire
