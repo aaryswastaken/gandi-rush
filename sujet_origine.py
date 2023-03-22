@@ -5,6 +5,7 @@
     Created Date: 03/14/2023
 """
 
+from __future__ import absolute_import
 from random import randint
 from math import log10
 import os
@@ -243,6 +244,34 @@ def detecte_coordonnees_combinaison(grille, i, j):
     return [item for sub_list in iterations for item in sub_list if len(item) == 2]
 
 
+def detecte_combinaison(grille, i, j):
+    """
+        detecte_combinaison: Renvoie True si une combinaison horizontale ou verticale est présente
+
+        Parametres:
+            grille (Grille): la grille
+            i (int): coordonnees en x
+            j (int): coordonnees en y
+
+        Renvoie:
+            res (bool): Le resultat
+    """
+
+    actual_type = grille.grille[j][i]
+
+    # print(f"Testing for ({i}, {j})")
+
+    if explore_adj(grille.grille, i-1, j, actual_type) and \
+            explore_adj(grille.grille, i+1, j, actual_type):
+        return True
+
+    if explore_adj(grille.grille, i, j-1, actual_type) and \
+            explore_adj(grille.grille, i, j+1, actual_type):
+        return True
+
+    return False
+
+
 class Physique():
     """
         Classe qui gère la physique du jeu
@@ -274,9 +303,9 @@ class Physique():
         else:
             self.max_x = 0
 
-    def do_gravity(self):
+    def tick_gravitee(self):
         """
-            do_gravity: Effectue la gravité
+            tick_gravitee: Effectue la gravité (fait tomber les trucs)
 
             Parametres:
                 None
@@ -335,23 +364,39 @@ class Physique():
             # Permutations
             self.grille.permute(permutation)
 
-            to_delete0 = detecte_coordonnees_combinaison(self.grille, permutation[0][0],
-                            permutation[0][1])
-            to_delete1 = detecte_coordonnees_combinaison(self.grille, permutation[1][0],
-                            permutation[1][1])
+            to_delete0 = detecte_coordonnees_combinaison(self.grille,
+                                                         permutation[0][0], permutation[0][1])
+            to_delete1 = detecte_coordonnees_combinaison(self.grille,
+                                                         permutation[1][0], permutation[1][1])
 
-            if len(to_delete0) < 3 and len(to_delete1) < 3:
+            # Can be optimized
+            is_detected0 = any(detecte_combinaison(self.grille, coords[0], coords[1])
+                               for coords in to_delete0)
+            is_detected1 = any(detecte_combinaison(self.grille, coords[0], coords[1])
+                               for coords in to_delete1)
+
+            # This line has been removed because if there is an alignement, there must be
+            # more than 3 tangent pieces
+
+            # if len(to_delete0) < 3 and len(to_delete1) < 3:
+
+            if not (is_detected0 or is_detected1): # If there is no alignement on both permuted
                 # Pas possible
                 self.grille.permute(permutation) # On remets comme de base
                 return 2
 
-            to_delete_array = [to_delete0, to_delete1]
+            # to_delete_array = [to_delete0, to_delete1]
+            if is_detected0:
+                to_delete_array.append(to_delete0)
+            if is_detected1:
+                to_delete_array.append(to_delete1)
+
         else:
             # Utilisé dans le check global pour le refresh de la grille
             to_delete_array = [
-                    detecte_coordonnees_combinaison(self.grille, permutation[0][0],
-                            permutation[0][1])
-                    ]
+                detecte_coordonnees_combinaison(self.grille, permutation[0][0],
+                                                permutation[0][1])
+            ]
 
         for to_delete in to_delete_array:
             if len(to_delete) >= 3:
@@ -374,11 +419,13 @@ class Physique():
             ancienne_grille = self.grille.clone()
             for (pos_y, grille_sl) in enumerate(self.grille.grille):
                 for (pos_x, _e) in enumerate(grille_sl):
-                    self.__routine_tick_mode_3([(pos_x, pos_y)], solo=True)
+                    # If there is a horizontal or vertical alignement
+                    if detecte_combinaison(self.grille, pos_x, pos_y):
+                        self.__routine_tick_mode_3([(pos_x, pos_y)], solo=True)
 
             animation_tick()
 
-            self.do_gravity()
+            self.tick_gravitee()
 
             animation_tick()
 
@@ -396,7 +443,7 @@ class Physique():
 
         animation_tick()
 
-        self.do_gravity()
+        self.tick_gravitee()
 
         animation_tick()
 
@@ -600,9 +647,9 @@ class GameManager():
             permutation.append(other)
 
             result = self.physique.tick(permutation,
-                    animation_tick=
-                        (lambda: self.print_grid(delay=self.animation_period))
-                        if self.do_animation else (lambda: None))
+                                        animation_tick=(lambda: self.print_grid(
+                                            delay=self.animation_period)) if self.do_animation
+                                        else (lambda: None))
 
             if result == 0:
                 pass
@@ -648,10 +695,10 @@ def test_detecte_coordonnees_combinaison():
 
     raw_grilles = [
         [[1]],
-        [ [0, 0, 0], [0, 1, 0], [0, 0, 0] ],
-        [ [0, 0, 0], [0, 1, 0], [0, 0, 0] ],
-        [ [1, 1, 1], [1, 0, 0], [1, 1, 0] ],
-        [ [1, 1, 1], [1, 0, 0], [1, 1, 0] ],
+        [[0, 0, 0], [0, 1, 0], [0, 0, 0]],
+        [[0, 0, 0], [0, 1, 0], [0, 0, 0]],
+        [[1, 1, 1], [1, 0, 0], [1, 1, 0]],
+        [[1, 1, 1], [1, 0, 0], [1, 1, 0]],
     ]
 
     all_expected = [
@@ -695,5 +742,5 @@ if __name__ == "__main__":
     if "--test" in sys.argv:
         test_detecte_coordonnees_combinaison()
     else:
-        game = GameManager()
-        game.run()
+        GAME = GameManager()
+        GAME.run()
