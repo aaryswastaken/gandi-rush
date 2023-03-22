@@ -303,9 +303,9 @@ class Physique():
         else:
             self.max_x = 0
 
-    def do_gravity(self):
+    def tick_gravitee(self):
         """
-            do_gravity: Effectue la gravité (fait tomber les trucs)
+            tick_gravitee: Effectue la gravité (fait tomber les trucs)
 
             Parametres:
                 None
@@ -425,7 +425,7 @@ class Physique():
 
             animation_tick()
 
-            self.do_gravity()
+            self.tick_gravitee()
 
             animation_tick()
 
@@ -443,7 +443,7 @@ class Physique():
 
         animation_tick()
 
-        self.do_gravity()
+        self.tick_gravitee()
 
         animation_tick()
 
