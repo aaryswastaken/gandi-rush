@@ -9,6 +9,8 @@ from __future__ import absolute_import
 from tkinter import Tk, Canvas
 from random import randint
 from PIL import Image, ImageTk
+import time
+from threading import Thread
 
 
 SPRITE = []
@@ -23,15 +25,10 @@ def load_sprites():
                                          .resize((48, 48), Image.NEAREST)))
 
 
-class WindowController(Tk):
-    """
-    Objet désignant la fenêtre root
-    """
-    def __init__(self):
-        super().__init__()
-        self["bg"] = "#73c2fa"
-        self.geometry("1200x800")
-        self.resizable(width=False, height=False)
+def configure_window(root):
+    root["bg"] = "#73c2fa"
+    root.geometry("1200x800")
+    root.resizable(width=False, height=False)
 
 
 class MenuPrincipal:
@@ -44,7 +41,8 @@ class MenuPrincipal:
 
     def __init__(self, root):
         self.root = root
-        root.columnconfigure(0, weight=1)
+        self.jeu=FenetreDeJeu(self.root)
+        root.columnconfigure(0,)
         root.rowconfigure(0, weight=1)
         root.rowconfigure(1, weight=1)
         # Logo
@@ -65,8 +63,8 @@ class MenuPrincipal:
         self.bouton.bind("<Leave>", self.leave_bouton)
         self.bouton.bind("<Button-1>", self.bouton_jouer_click)
         self.bouton.focus_set()
-        self.logo.grid(row=0, column=0, sticky="n")
-        self.bouton.grid(row=1, column=0, sticky="")
+        self.logo.grid(row=0, column=1, sticky="n")
+        self.bouton.grid(row=1, column=1, sticky="n")
 
     def enter_bouton(self, _):
         """
@@ -98,7 +96,7 @@ class MenuPrincipal:
         """
 
         self.leave_menu(None)
-        FenetreDeJeu(self.root).lancer_jeu()
+        self.jeu.lancer_jeu()
 
 
 class FenetreDeJeu():
@@ -115,12 +113,12 @@ class FenetreDeJeu():
         self.grille_element = []
         self.focus = (None, None)
         self.grille_de_base = genere_alea(3)
-
         load_sprites()
 
     def lancer_jeu(self):
         """
         Initialise le jeu
+
         """
 
         self.root.bind("<Button-3>", lambda x: self.backgroundclick())
@@ -218,7 +216,11 @@ def genere_alea(nb_max):
     """
     return [[randint(0, nb_max) for i in range(15)] for j in range(15)]
 
+
 if __name__ == "__main__":
-    FENETRE = WindowController()
-    MENU = MenuPrincipal(FENETRE)
-    MENU.root.mainloop()
+    root = Tk()
+    configure_window(root)
+
+    MENU = MenuPrincipal(root)
+
+    root.mainloop()
