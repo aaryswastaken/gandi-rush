@@ -231,6 +231,7 @@ class Event():
     """
         This class defines an event and its methods and its methods
     """
+
     TYPE_UI_REFRESH = 1     # Just reloads the whole board
     TYPE_UI_UPDATE = 2      # Undates according to modifications on the payload
     TYPE_UI_ACTION = 3      # When the user makes a move
