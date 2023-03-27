@@ -235,6 +235,7 @@ class Event():
     TYPE_UI_UPDATE = 2      # Undates according to modifications on the payload
     TYPE_UI_ACTION = 3      # When the user makes a move
     TYPE_SCORE_UPDATE = 4   # Updates the score
+    TYPE_GEN_TRIGGER = 5
 
     def __init__(self, dest, msg_type, payload):
         # 0: ui -> grid manager
