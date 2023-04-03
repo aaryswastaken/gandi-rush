@@ -8,7 +8,14 @@
 # Importing modules for the GridManager Thread
 from __future__ import absolute_import
 from threading import Thread
+from time import sleep
 
+from event_pool_controller import Event
+
+
+
+def default_val(val, default=0):
+    return val if val is not None else default
 
 def explore_adj(_grille, pos_x, pos_y, scanned_value):
     """
@@ -37,7 +44,7 @@ class GridManager(Thread):
         This class manages the grid and its physics
     """
 
-    def __init__(self, difficulty, event_pool, generator):
+    def __init__(self, difficulty, event_pool, generator, animation_wait_time=0):
         super().__init__(self)
         self.grid = []
         self.grid_size = ()
@@ -45,6 +52,7 @@ class GridManager(Thread):
         self.difficulty = difficulty
         self.event_pool = event_pool
         self.generator = generator
+        self.animation_wait_time = animation_wait_time
 
         self.thread_stop_flag = False
 
@@ -71,10 +79,38 @@ class GridManager(Thread):
 
         self.thread_stop_flag = True
 
+    def __event_tick(self, payload):
+        """
+            __event_tick: Function called every tick to append to the pool permutation
+
+            Parameters:
+                payload (object):
+                    "coordinates" (tuple<int>): coordinates
+                    "animation_id" (int): animation_id
+        """
+
     def run(self):
         """
             Main loop
         """
+
+        while not self.thread_stop_flag:
+            event = self.event_pool.next_and_delete(0)
+
+            if event.msg_type == Event.TYPE_GRID_PERMUTATION:
+                permutation = event.payload["permuation"]
+
+                if len(permutation) != 2 or isinstance(permutation, tuple):
+                    error_event = Event(1, Event.TYPE_GRID_PERMUTATION_ERROR,
+                                        {"permutation": permutation})
+                    self.event_pool.push(error_event)
+
+                res = self.tick(permutation, animation_tick=self.__event_tick,
+                                animation_wait_time=self.animation_wait_time)
+
+                if res != 1:
+                    error_event = Event(1, Event.TYPE_GRID_TICK_ERROR,
+                                        {"permutation": permutation, "res": res})
 
     # Following code is going to be yoinked from sujet_origine.py
     def permute(self, permutation):
@@ -224,7 +260,7 @@ class GridManager(Thread):
 
         return False
 
-    def tick_gravitee(self):
+    def tick_gravitee(self, animation_tick=lambda payload: None):
         """
             tick_gravitee: Effectue la gravité (fait tomber les trucs)
 
@@ -242,16 +278,26 @@ class GridManager(Thread):
 
         mutated_transposed = []
 
-        for line in transposed:
+        for (col_id, line) in enumerate(transposed):
             if -1 in line: # If not, skip
                 i = len(line) - 1
-                n_occurences = sum(int(e == -1) for e in line)
+                n_occurences = sum(int(e is None) for e in line)
 
                 # Migrates values:
                 # [2, -1, 4, 5, -1, 6] -> [-1, -1, 2, 4, 5, 6]
                 while i > (n_occurences-1):
-                    while line[i] == -1:
-                        new_line = [-1, *line[0:i], *line[(i+1):]]
+                    while line[i] is None:
+                        # On index i we move to the right, corresponding to the bottom
+                        # when transposed
+
+                        an_id = 200
+                        an_id += default_val(line[i], default=0) * 10
+                        an_id += default_val(line[i-1], default=0) if i-1 >= 0 else 0
+
+                        animation_tick({"coordinates": (i, col_id),
+                                        "animation_id": an_id})
+
+                        new_line = [None, *line[0:i], *line[(i+1):]]
                         line = new_line
                     i -= 1
 
@@ -265,7 +311,8 @@ class GridManager(Thread):
                 #     i += 1
 
                 # This method works only if EVERY -1 has been displaced:
-                new_line = [self.grid.genere_case() if e == -1 else e for e in line]
+                # TODO: self.generator.generate_cell() is a temporary method
+                new_line = [self.generator.generate_cell() if e is None else e for e in line]
                 line = new_line
 
             mutated_transposed.append(line)
@@ -274,7 +321,7 @@ class GridManager(Thread):
 
         return 0
 
-    def __routine(self, permutation, solo=False):
+    def __routine(self, permutation, animation_tick=lambda payload: None, solo=False):
         """
             __routine (private): Tick mais pour le mode 3
         """
@@ -321,11 +368,14 @@ class GridManager(Thread):
         for to_delete in to_delete_array:
             if len(to_delete) >= 3:
                 for coords in to_delete:
-                    self.grid[coords[1]][coords[0]] = -1
+                    animation_tick({"coordinates": (coords[0], coords[1]),
+                                    "animation_id": 100+self.grid[coords[1]][coords[0]]})
+
+                    self.grid[coords[1]][coords[0]] = None
 
         return 0
 
-    def __refresh(self, animation_tick=lambda: None):
+    def __refresh(self, animation_tick=lambda payload: None, animation_wait_time=0):
         """
             __refresh (private): Routine de rafraichissement par le mode 3
         """
@@ -341,34 +391,35 @@ class GridManager(Thread):
                 for (pos_x, _e) in enumerate(grille_sl):
                     # If there is a horizontal or vertical alignement
                     if self.detecte_combinaison(pos_x, pos_y):
-                        self.__routine([(pos_x, pos_y)], solo=True)
+                        self.__routine([(pos_x, pos_y)], animation_tick=animation_tick,
+                                       solo=True)
 
-            animation_tick()
+            sleep(animation_wait_time / 1000)
 
-            self.tick_gravitee()
+            self.tick_gravitee(animation_tick=animation_tick)
 
-            animation_tick()
+            sleep(animation_wait_time / 1000)
 
         return 0
 
 
-    def __tick(self, permutation, animation_tick):
+    def __tick(self, permutation, animation_tick=lambda payload: None, animation_wait_time=0):
         """
             __tick (private): Wrapper pour __routine_tick_mode_3
         """
 
-        res = self.__routine(permutation)
+        res = self.__routine(permutation, animation_tick=animation_tick)
         if res != 0:
             return res
 
-        animation_tick()
+        sleep(animation_wait_time / 1000)
 
-        self.tick_gravitee()
+        self.tick_gravitee(animation_tick=animation_tick)
 
-        animation_tick()
+        sleep(animation_wait_time / 1000)
 
         # Doit refresh toute la grille (doit opti)
-        res = self.__refresh(animation_tick)
+        res = self.__refresh(animation_tick, animation_wait_time)
 
         return res
 
@@ -395,12 +446,15 @@ class GridManager(Thread):
 
         return distance_manhattan == 1
 
-    def tick(self, permutation, animation_tick=lambda: None):
+    def tick(self, permutation, animation_tick=lambda payload: None,
+             animation_wait_time=0):
         """
             tick: Actualise la grille selon le mode de jeu
 
             Parametres:
                 permutation (tuple<tuple<int>>): deux cases permutées
+                animation_tick (function(payload: object)): Animation tick
+                animation_wait_time (int): The period of the animation (ms)
 
             Renvoie:
                 state (int): Le code de retour
@@ -415,4 +469,4 @@ class GridManager(Thread):
         if not self.is_legal_permutation(permutation):
             return 1
 
-        return self.__tick(permutation, animation_tick)
+        return self.__tick(permutation, animation_tick, animation_wait_time)
