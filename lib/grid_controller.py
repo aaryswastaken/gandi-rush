@@ -15,6 +15,16 @@ from event_pool_controller import Event
 
 
 def default_val(val, default=0):
+    """
+        Returns val if not None, else returns default
+
+        Parameters:
+            val (any): The value
+            default (any, optional): The replacement [default=int<0>]
+
+        Returns:
+            res (any)
+    """
     return val if val is not None else default
 
 def explore_adj(_grille, pos_x, pos_y, scanned_value):
