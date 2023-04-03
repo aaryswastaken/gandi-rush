@@ -274,9 +274,9 @@ class GridManager(Thread):
 
         return 0
 
-    def __routine_tick_mode_3(self, permutation, solo=False):
+    def __routine(self, permutation, solo=False):
         """
-            __routine_tick_mode_3 (private): Tick mais pour le mode 3
+            __routine (private): Tick mais pour le mode 3
         """
 
         to_delete_array = []
@@ -325,9 +325,9 @@ class GridManager(Thread):
 
         return 0
 
-    def __refresh_mode_3(self, animation_tick=lambda: None):
+    def __refresh(self, animation_tick=lambda: None):
         """
-            __refresh_mode_3 (private): Routine de rafraichissement par le mode 3
+            __refresh (private): Routine de rafraichissement par le mode 3
         """
 
         ancienne_grille = self.grid.clone()
@@ -341,7 +341,7 @@ class GridManager(Thread):
                 for (pos_x, _e) in enumerate(grille_sl):
                     # If there is a horizontal or vertical alignement
                     if self.detecte_combinaison(pos_x, pos_y):
-                        self.__routine_tick_mode_3([(pos_x, pos_y)], solo=True)
+                        self.__routine([(pos_x, pos_y)], solo=True)
 
             animation_tick()
 
@@ -352,12 +352,12 @@ class GridManager(Thread):
         return 0
 
 
-    def __tick_mode_3(self, permutation, animation_tick):
+    def __tick(self, permutation, animation_tick):
         """
-            __tick_mode_3 (private): Wrapper pour __routine_tick_mode_3
+            __tick (private): Wrapper pour __routine_tick_mode_3
         """
 
-        res = self.__routine_tick_mode_3(permutation)
+        res = self.__routine(permutation)
         if res != 0:
             return res
 
@@ -368,7 +368,7 @@ class GridManager(Thread):
         animation_tick()
 
         # Doit refresh toute la grille (doit opti)
-        res = self.__refresh_mode_3(animation_tick)
+        res = self.__refresh(animation_tick)
 
         return res
 
@@ -415,4 +415,4 @@ class GridManager(Thread):
         if not self.is_legal_permutation(permutation):
             return 1
 
-        return self.__tick_mode_3(permutation, animation_tick)
+        return self.__tick(permutation, animation_tick)
