@@ -99,6 +99,11 @@ class GridManager(Thread):
                     "animation_id" (int): animation_id
         """
 
+        event = Event(1, Event.TYPE_UI_UPDATE,
+                      {"update_type": 1, "coordinates": payload.coordinates,
+                       "new_gem": payload.animation_id})
+        self.event_pool.push(event)
+
     def run(self):
         """
             Main loop
@@ -121,6 +126,8 @@ class GridManager(Thread):
                 if res != 1:
                     error_event = Event(1, Event.TYPE_GRID_TICK_ERROR,
                                         {"permutation": permutation, "res": res})
+
+                    self.event_pool.push(error_event)
 
     # Following code is going to be yoinked from sujet_origine.py
     def permute(self, permutation):
