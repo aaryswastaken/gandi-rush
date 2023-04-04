@@ -25,13 +25,11 @@ The coordinates, if not specified are stored in an integer tuple (noted `tuple<i
 
 ## Animation
 
-animation_id:
+Animation is done through different sprite that are controlled from the Grid Manager.
+
+#### Animation spritde id:
  - 10x -> deletion of gem x
  - 2xy -> x at the bottom, y at the top
  - 30x -> x is appearing
 
 Note: gem id 0 is empty
-
-Done:
- - deletion animation in __routine
- - translation in tick_gravitee
