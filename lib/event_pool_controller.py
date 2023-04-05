@@ -231,10 +231,16 @@ class Event():
     """
         This class defines an event and its methods and its methods
     """
-    TYPE_UI_REFRESH = 1     # Just reloads the whole board
-    TYPE_UI_UPDATE = 2      # Undates according to modifications on the payload
-    TYPE_UI_ACTION = 3      # When the user makes a move
-    TYPE_SCORE_UPDATE = 4   # Updates the score
+
+    TYPE_GRID_PERMUTATION = 0   #
+    TYPE_UI_REFRESH = 1         # Just reloads the whole board
+    TYPE_UI_UPDATE = 2          # Undates according to modifications on the payload
+    TYPE_UI_ACTION = 3          # When the user makes a move
+    TYPE_SCORE_UPDATE = 4       # Updates the score
+    TYPE_GEN_TRIGGER = 5
+
+    TYPE_GRID_PERMUTATION_ERROR = 10
+    TYPE_GRID_TICK_ERROR = 11
 
     def __init__(self, dest, msg_type, payload):
         # 0: ui -> grid manager
