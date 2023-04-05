@@ -28,6 +28,9 @@ class WindowController(Tk):
     Objet désignant la fenêtre root
     """
 
+    # Because this is a Tk heritage as a small wrapper to ease things out
+    # TODO: Rewrite this as a public function rather than class?
+
     # pylint: disable=too-few-public-methods
 
     def __init__(self):

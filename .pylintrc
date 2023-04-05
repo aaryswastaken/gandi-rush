@@ -1,4 +1,5 @@
 [MESSAGES CONTROL]
+# Idk why we use it anymore but it's here
 disable=W0511
 
 [MISCELLANEOUS]
