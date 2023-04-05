@@ -27,6 +27,9 @@ class WindowController(Tk):
     """
     Objet désignant la fenêtre root
     """
+
+    # pylint: disable=too-few-public-methods
+
     def __init__(self):
         super().__init__()
         self["bg"] = "#73c2fa"
