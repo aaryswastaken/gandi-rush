@@ -7,6 +7,7 @@
 
 from random import randint
 
+
 class Grid():
     """
         This class handles the grid
@@ -102,6 +103,37 @@ class Grid():
         self.replace_none_start()
 
         return self.grid
+
+    def populate_grid_manager(self, grid_manager):
+        """
+            This function helps to fill in the grid_manager's values
+
+            Parameters:
+                grid_manager (GridManager)
+
+            Returns:
+                None
+        """
+
+        grid_manager.grid = self.grid
+        grid_manager.grid_size = self.grid_size
+
+    def fill_grid_manager_nones(self, grid_manager):
+        """
+            After grid_manager's gravity tick we need to regenerate new cells
+
+            Parameters:
+                grid_manager (GridManager)
+
+            Returns:
+                None
+        """
+
+        # Very poor implementation but works because python
+        self.grid = grid_manager.grid
+        self.replace_none_start()
+        grid_manager.grid = self.grid
+
 
 if __name__ == "__main__":
     def check_any_adjacence(grid):
