@@ -9,8 +9,7 @@ from __future__ import absolute_import
 from tkinter import Tk, Canvas ,StringVar, Label
 from random import randint
 from PIL import Image, ImageTk
-import time
-from threading import Thread
+
 
 
 SPRITE = []
@@ -26,6 +25,11 @@ def load_sprites():
 
 
 def configure_window(root):
+    """
+    :param Fenetre TK:
+    :return None:
+    Configure la fenêtre
+    """
     root["bg"] = "#73c2fa"
     root.geometry("1200x800")
     root.resizable(width=False, height=False)
@@ -109,6 +113,7 @@ class FenetreDeJeu():
         root.rowconfigure(0, weight=0)
         root.rowconfigure(1, weight=0)
         root.columnconfigure(16, weight=1)
+        self.score = None
         self.root = root
         self.grille_element = []
         self.focus = (None, None)
@@ -122,7 +127,8 @@ class FenetreDeJeu():
 
         """
         self.score = StringVar()
-        text_score = Label(textvariable=self.score, bg="#73c2fa", font=("TkTooltipFont",25), fg='#45283c')
+        text_score = Label(textvariable=self.score, bg="#73c2fa", font=("TkTooltipFont",25),
+                           fg='#45283c')
         self.score.set("Score : 0")
         text_score.grid(row=1, column=0)
 
@@ -143,7 +149,6 @@ class FenetreDeJeu():
         """
         Evenement si un clique hors grille est réalisé
         """
-
         if self.focus != (None, None):
             self.off_focus()
             self.focus = (None, None)
@@ -152,6 +157,10 @@ class FenetreDeJeu():
         """
         Evenement si une gemme est cliqué
         """
+
+        # Until is used
+        if value is None:
+            pass
 
         if self.focus == (None, None):
             self.focus = (i, j)
@@ -220,11 +229,13 @@ def genere_alea(nb_max):
 
 
 class WindowController:
+    """
+Permet de génerer la fenetre Tkinter
+    """
     def __init__(self):
         root = Tk()
         configure_window(root)
-
-        MENU = MenuPrincipal(root)
-
+        self.menu = MenuPrincipal(root)
         root.mainloop()
-
+    def getMenu(self):
+        return self.menu
