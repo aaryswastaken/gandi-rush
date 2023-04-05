@@ -219,10 +219,12 @@ def genere_alea(nb_max):
     return [[randint(0, nb_max) for i in range(15)] for j in range(15)]
 
 
-if __name__ == "__main__":
-    root = Tk()
-    configure_window(root)
+class WindowController:
+    def __init__(self):
+        root = Tk()
+        configure_window(root)
 
-    MENU = MenuPrincipal(root)
+        MENU = MenuPrincipal(root)
 
-    root.mainloop()
+        root.mainloop()
+

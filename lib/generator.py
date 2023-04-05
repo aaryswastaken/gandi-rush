@@ -8,7 +8,7 @@
 from random import randint
 
 
-class Grid():
+class GridGenerator():
     """
         This class handles the grid
     """
