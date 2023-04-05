@@ -5,6 +5,13 @@
     Created Date: 03/14/2023
 """
 
+# We use this because some code is pratically identical to some from other files, especially
+# event_pool_controler.py . We chose not to fix this because we believe that both project version
+# should be existing independently and we're too lazy to do another implementation, considering
+# this one is good enough for out needs
+
+# pylint: disable=duplicate-code
+
 from __future__ import absolute_import
 from random import randint
 from math import log10
