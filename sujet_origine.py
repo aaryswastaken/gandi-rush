@@ -5,6 +5,8 @@
     Created Date: 03/14/2023
 """
 
+# pylint: disable=duplicate-code
+
 from __future__ import absolute_import
 from random import randint
 from math import log10
