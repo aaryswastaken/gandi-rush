@@ -6,7 +6,7 @@
 """
 
 from __future__ import absolute_import
-from tkinter import Tk, Canvas
+from tkinter import Tk, Canvas ,StringVar, Label
 from random import randint
 from PIL import Image, ImageTk
 import time
@@ -115,11 +115,16 @@ class FenetreDeJeu():
         self.grille_de_base = genere_alea(3)
         load_sprites()
 
+
     def lancer_jeu(self):
         """
         Initialise le jeu
 
         """
+        self.score = StringVar()
+        text_score = Label(textvariable=self.score, bg="#73c2fa", font=("TkTooltipFont",25), fg='#45283c')
+        self.score.set("Score : 0")
+        text_score.grid(row=1, column=0)
 
         self.root.bind("<Button-3>", lambda x: self.backgroundclick())
         for (i, _element) in enumerate(self.grille_de_base):
@@ -162,8 +167,6 @@ class FenetreDeJeu():
             self.off_focus()
             self.focus = (None, None)
 
-        print(f"je suis une gemme de type { {0:'Bleu',1:'Jaune',2:'Rouge',3:'Verte'}[value]} "+\
-                "aux coordonné {i} {j}")
 
     def on_focus(self, i, j):
         """
@@ -183,7 +186,6 @@ class FenetreDeJeu():
 
         i = self.focus[0]
         j = self.focus[1]
-        print(i, j)
         if not(j in (0, 14) or i in (0, 14)):
             self.grille_element[int(i-1)][int(j)].config(bg="#73c2fa")
             self.grille_element[int(i+1)][int(j)].config(bg="#73c2fa")
