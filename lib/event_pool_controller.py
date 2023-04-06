@@ -120,6 +120,12 @@ class EventPool():
 
         self.stack.append(pooled_event)
 
+        for listener in self.listener:
+            if (listener["scope"] == 0 or listener["scope"] is None) \
+                    and listener["active"] is True:
+
+                listener["l"](event)
+
         return pid
 
     def push_priority(self, event):
@@ -134,10 +140,16 @@ class EventPool():
         """
 
         pid = len(self.stack) + 1
-        pooled_event = event.derive_pooled_event()
+        pooled_event = event.derive_pooled_event(pid)
         pooled_event.flag = 1
 
         self.stack.append(pooled_event)
+
+        for listener in self.listener:
+            if (listener["scope"] == 1 or listener["scope"] is None) \
+                    and listener["active"] is True:
+
+                listener["l"](event)
 
         return pid
 
