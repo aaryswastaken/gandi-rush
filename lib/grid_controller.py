@@ -55,7 +55,7 @@ class GridManager(Thread):
     """
 
     def __init__(self, difficulty, event_pool, generator, animation_wait_time=0):
-        super().__init__(self)
+        super().__init__()
         self.grid = []
         self.grid_size = ()
 
