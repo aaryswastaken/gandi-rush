@@ -227,16 +227,3 @@ def genere_alea(nb_max):
     Fonction temporaire
     """
     return [[randint(0, nb_max) for i in range(15)] for j in range(15)]
-
-
-class WindowController:
-    """
-Permet de génerer la fenetre Tkinter
-    """
-    def __init__(self):
-        root = Tk()
-        configure_window(root)
-        self.menu = MenuPrincipal(root)
-        root.mainloop()
-    def getMenu(self):
-        return self.menu
