@@ -33,7 +33,7 @@ def configure_window(root):
 
     root["bg"] = "#73c2fa"
     root.geometry("1200x800")
-    rootgit fetch --all.resizable(width=False, height=False)
+    root.resizable(width=False, height=False)
 
 
 class MenuPrincipal:
