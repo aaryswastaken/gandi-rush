@@ -6,7 +6,7 @@ import pytest
 
 from lib.grid_controller import GridManager
 from lib.event_pool_controller import EventPool, Event
-from lib.generator import Grid
+from lib.generator import GridGenerator
 
 # from time import sleep
 
@@ -19,7 +19,7 @@ def fixture_grid_manager():
     """
 
     event_pool = EventPool()
-    gen = Grid()
+    gen = GridGenerator()
 
     manager = GridManager(0.5, event_pool, gen)
     manager.start()
