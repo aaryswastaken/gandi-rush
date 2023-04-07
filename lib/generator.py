@@ -136,6 +136,8 @@ class GridGenerator():
 
 
 if __name__ == "__main__":
+    # TODO: WRITE THIS AS A TEST
+    
     def check_any_adjacence(grid):
         """
             Returns true if the grid is invalid
@@ -161,7 +163,7 @@ if __name__ == "__main__":
     i = 0
     ONE_FAILED = False
     while i <= N_TEST and not ONE_FAILED:
-        grid_instance = Grid()
+        grid_instance = GridGenerator()
 
         r_grid = grid_instance.init_sequence(randint(10, 30), randint(10, 30), randint(4, 5))
 
