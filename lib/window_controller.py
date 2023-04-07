@@ -6,7 +6,7 @@
 """
 
 from __future__ import absolute_import
-from tkinter import Tk, Canvas ,StringVar, Label
+from tkinter import Canvas, StringVar, Label
 from random import randint
 from PIL import Image, ImageTk
 
