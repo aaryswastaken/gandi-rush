@@ -8,9 +8,9 @@
 # Importing modules for the GridManager Thread
 from __future__ import absolute_import
 from time import sleep
+
 from threading import Thread
 from lib.event_pool_controller import Event
-
 
 
 def default_val(val, default=0):
@@ -54,7 +54,7 @@ class GridManager(Thread):
     """
 
     def __init__(self, difficulty, event_pool, generator, animation_wait_time=0):
-        super().__init__(self)
+        super().__init__()
         self.grid = []
         self.grid_size = ()
 
@@ -111,22 +111,23 @@ class GridManager(Thread):
         while not self.thread_stop_flag:
             event = self.event_pool.next_and_delete(0)
 
-            if event.msg_type == Event.TYPE_GRID_PERMUTATION:
-                permutation = event.payload["permuation"]
+            if event is not None:
+                if event.msg_type == Event.TYPE_GRID_PERMUTATION:
+                    permutation = event.payload["permuation"]
 
-                if len(permutation) != 2 or isinstance(permutation, tuple):
-                    error_event = Event(1, Event.TYPE_GRID_PERMUTATION_ERROR,
-                                        {"permutation": permutation})
-                    self.event_pool.push(error_event)
+                    if len(permutation) != 2 or isinstance(permutation, tuple):
+                        error_event = Event(1, Event.TYPE_GRID_PERMUTATION_ERROR,
+                                            {"permutation": permutation})
+                        self.event_pool.push(error_event)
 
-                res = self.tick(permutation, animation_tick=self.__event_tick,
-                                animation_wait_time=self.animation_wait_time)
+                    res = self.tick(permutation, animation_tick=self.__event_tick,
+                                    animation_wait_time=self.animation_wait_time)
 
-                if res != 1:
-                    error_event = Event(1, Event.TYPE_GRID_TICK_ERROR,
-                                        {"permutation": permutation, "res": res})
+                    if res != 1:
+                        error_event = Event(1, Event.TYPE_GRID_TICK_ERROR,
+                                            {"permutation": permutation, "res": res})
 
-                    self.event_pool.push(error_event)
+                        self.event_pool.push(error_event)
 
     # Following code is going to be yoinked from sujet_origine.py
     def permute(self, permutation):

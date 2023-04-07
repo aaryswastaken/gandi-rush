@@ -30,9 +30,17 @@ def configure_window(root):
     :return None:
     Configure la fenêtre
     """
-    root["bg"] = "#73c2fa"
-    root.geometry("1200x800")
-    root.resizable(width=False, height=False)
+
+    # Because this is a Tk heritage as a small wrapper to ease things out
+    # TODO: Rewrite this as a public function rather than class?
+
+    # pylint: disable=too-few-public-methods
+
+    def __init__(self):
+        super().__init__()
+        self["bg"] = "#73c2fa"
+        self.geometry("1200x800")
+        self.resizable(width=False, height=False)
 
 
 class MenuPrincipal:
