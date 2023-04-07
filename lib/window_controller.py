@@ -14,13 +14,13 @@ from PIL import Image, ImageTk
 
 SPRITE = []
 
-def load_sprites():
+def load_sprites(sprite_home):
     """
         Loads the sprites
     """
 
     for i in ["PierreBleu", "PierreJaune", "PierreRouge", "PierreVerte", "animation_destruction"]:
-        SPRITE.append(ImageTk.PhotoImage(Image.open("../sprite/"+i+".png")
+        SPRITE.append(ImageTk.PhotoImage(Image.open(sprite_home+i+".png")
                                          .resize((48, 48), Image.NEAREST)))
 
 
@@ -44,20 +44,20 @@ class MenuPrincipal:
     # Because this class manages tkinter things
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, root):
+    def __init__(self, root, sprite_home="../sprite/"):
         self.root = root
-        self.jeu=FenetreDeJeu(self.root)
+        self.jeu=FenetreDeJeu(self.root, sprite_home)
         root.columnconfigure(0,)
         root.rowconfigure(0, weight=1)
         root.rowconfigure(1, weight=1)
         # Logo
-        self.original_logo = Image.open('../sprite/Logo.png').convert('RGB')
+        self.original_logo = Image.open(sprite_home+'Logo.png').convert('RGB')
         self.image_logo = ImageTk.PhotoImage(self.original_logo.resize((400, 300), Image.NEAREST))
         self.logo = Canvas(root, height=300, width=400, borderwidth=0, highlightthickness=0)
         self.logo.create_image(0, 0, image=self.image_logo, anchor='nw')
         # BoutonJouer
-        self.original_bouton1 = Image.open("../sprite/Bouton1.png")
-        self.original_bouton2 = Image.open("../sprite/Bouton2.png")
+        self.original_bouton1 = Image.open(sprite_home+"Bouton1.png")
+        self.original_bouton2 = Image.open(sprite_home+"Bouton2.png")
         self.image_bouton1 = ImageTk.PhotoImage(self.original_bouton1.resize((400, 200),
                                                                              Image.NEAREST))
         self.image_bouton2 = ImageTk.PhotoImage(self.original_bouton2.resize((400, 200),
@@ -109,7 +109,7 @@ class FenetreDeJeu():
     Decris la fenêtre de jeu
     """
 
-    def __init__(self, root):
+    def __init__(self, root, sprite_home):
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=0)
         root.rowconfigure(1, weight=0)
@@ -119,7 +119,7 @@ class FenetreDeJeu():
         self.grille_element = []
         self.focus = (None, None)
         self.grille_de_base = genere_alea(3)
-        load_sprites()
+        load_sprites(sprite_home)
 
 
     def lancer_jeu(self):

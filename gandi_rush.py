@@ -5,9 +5,11 @@
     Creation Date: 04/04/2023
 """
 
+from tkinter import Tk
+
 from lib.event_pool_controller import EventPool
 from lib.grid_controller import GridManager
-from lib.window_controller import WindowController, MenuPrincipal
+from lib.window_controller import MenuPrincipal, configure_window
 from lib.generator import GridGenerator
 
 if __name__ == "__main__":
@@ -17,7 +19,8 @@ if __name__ == "__main__":
     grid_controller = GridManager(0.5, event_pool, generator, animation_wait_time=150)
     grid_controller.start()
 
-    window_controller = WindowController()
-    menu = MenuPrincipal(window_controller)
+    window = Tk()
+    configure_window(window)
+    menu = MenuPrincipal(window, sprite_home="./sprite/")
 
-    menu.root.main_loop()
+    menu.root.mainloop()
