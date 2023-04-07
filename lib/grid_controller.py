@@ -7,9 +7,9 @@
 
 # Importing modules for the GridManager Thread
 from __future__ import absolute_import
-from threading import Thread
 from time import sleep
 
+from threading import Thread
 from lib.event_pool_controller import Event
 
 
