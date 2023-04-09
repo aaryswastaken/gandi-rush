@@ -37,7 +37,7 @@ def test_generator_1000():
     while i <= n_test and not one_failed:
         grid_instance = GridGenerator()
 
-        res = grid_instance.init_sequence(randint(10, 30), randint(10, 30), randint(4, 5))
+        res = grid_instance.init_sequence(randint(10, 30), randint(10, 30), randint(3, 5))
 
         if res != 0:
             one_failed = True

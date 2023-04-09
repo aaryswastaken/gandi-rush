@@ -150,7 +150,7 @@ if __name__ == "__main__":
 
     GRID = GridGenerator()
 
-    RES = GRID.init_sequence(10, 15, 4)
+    RES = GRID.init_sequence(10, 15, 3)
 
     if RES != 0:
         print("Error :/")
