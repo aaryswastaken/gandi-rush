@@ -128,6 +128,10 @@ class GridManager(Thread):
                                             {"permutation": permutation, "res": res})
 
                         self.event_pool.push(error_event)
+                elif event.msg_type == Event.TYPE_EXIT_ALL:
+                    # Using stop instead of self.stop_flag = True in case we do some
+                    # garbage collection in the method
+                    self.stop()
 
     # Following code is going to be yoinked from sujet_origine.py
     def permute(self, permutation):
