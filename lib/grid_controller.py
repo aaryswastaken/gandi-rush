@@ -1,6 +1,10 @@
 """
     This modules focuses on the grid management
 
+    NOTE: The exchange between the generator and the grid manager
+        is a bit trash, we should create a grid class that is shared
+        between both classes.
+
     Author: @aaryswastaken
     Created Date: 03/13/2023
 """
@@ -53,14 +57,14 @@ class GridManager(Thread):
         This class manages the grid and its physics
     """
 
-    def __init__(self, difficulty, event_pool, generator, animation_wait_time=0):
+    def __init__(self, event_pool, generator, candy_count=4, animation_wait_time=0):
         super().__init__()
         self.grid = []
         self.grid_size = ()
 
-        self.difficulty = difficulty
         self.event_pool = event_pool
         self.generator = generator
+        self.candy_count = candy_count
         self.animation_wait_time = animation_wait_time
 
         self.thread_stop_flag = False
@@ -77,9 +81,8 @@ class GridManager(Thread):
                 None
         """
 
-        self.grid_size = (size_x, size_y)
-
-        # TODO : to implement when @dchevalier69 will be finished with his code
+        self.generator.init_sequence(size_x, size_y, self.candy_count)
+        self.generator.populate_grid_manager(self)
 
     def stop(self):
         """
@@ -128,6 +131,10 @@ class GridManager(Thread):
                                             {"permutation": permutation, "res": res})
 
                         self.event_pool.push(error_event)
+                elif event.msg_type == Event.TYPE_GEN_TRIGGER:
+                    dimensions = event.payload["grid_size"]
+
+                    self.init_grid(dimensions[0], dimensions[1])
                 elif event.msg_type == Event.TYPE_EXIT_ALL:
                     # Using stop instead of self.stop_flag = True in case we do some
                     # garbage collection in the method
@@ -332,13 +339,16 @@ class GridManager(Thread):
                 #     i += 1
 
                 # This method works only if EVERY -1 has been displaced:
-                # TODO: self.generator.generate_cell() is a temporary method
-                new_line = [self.generator.generate_cell() if e is None else e for e in line]
-                line = new_line
+                # self.generator.generate_cell() was a temporary method
+                # new_line = [self.generator.generate_cell() if e is None else e for e in line]
+                # line = new_line
 
             mutated_transposed.append(line)
 
         self.grid.from_transposed(mutated_transposed)
+
+        # new method:
+        self.generator.fill_grid_manager_nones(self)
 
         return 0
 
