@@ -16,7 +16,7 @@ if __name__ == "__main__":
     event_pool = EventPool()
     generator = GridGenerator()
 
-    grid_controller = GridManager(0.5, event_pool, generator, animation_wait_time=150)
+    grid_controller = GridManager(event_pool, generator, animation_wait_time=150)
     grid_controller.start()
 
     window = Tk()
