@@ -30,6 +30,7 @@ class EventPool():
                 event (PooledEvent): The next event
         """
 
+        # Simple break-free implementation of a find algorithm
         i = 0
         out = None
 
@@ -51,6 +52,7 @@ class EventPool():
                 event (PooledEvent): The next event
         """
 
+        # Same as self.next but with a pop instead
         i = 0
         out = None
 
@@ -72,6 +74,7 @@ class EventPool():
                 event (PooledEvent): The next event
         """
 
+        # Same but filtered with only priority events
         i = 0
         out = None
 
@@ -94,6 +97,7 @@ class EventPool():
                 event (PooledEvent): The next event
         """
 
+        # ...
         i = 0
         out = None
 
@@ -115,18 +119,23 @@ class EventPool():
                 id (int): PooledEvent id
         """
 
+        # Compute the id of the pooled event (pool id = pid)
         pid = len(self.stack) + 1
-        pooled_event = event.derive_pooled_event(pid)
+        pooled_event = event.derive_pooled_event(pid)  # Deive a pooled event
 
+        # Push it to the stack
         self.stack.append(pooled_event)
 
+        # Call for listeners
         for listener in self.listener:
+            # Only the one that are only focused on low-priority event and listener
+            # that are listening everything
             if (listener["scope"] == 0 or listener["scope"] is None) \
                     and listener["active"] is True:
 
                 listener["l"](event)
 
-        return pid
+        return pid # Returning the pid "JICO"
 
     def push_priority(self, event):
         """
@@ -139,6 +148,8 @@ class EventPool():
                 id (int): PooledEvent id
         """
 
+        # Same as self.push except the event has a priority flag and we call
+        # the suitable listeners
         pid = len(self.stack) + 1
         pooled_event = event.derive_pooled_event(pid)
         pooled_event.flag = 1
@@ -173,13 +184,10 @@ class EventPool():
                 id (int): The listener id
         """
 
-        if scope is None:
-            scope = 0
-
-        # SHOULD REPLACE BY A RegisteredListener Class
+        # Append the listener with a bit of context to identify it
         self.listener.append({"l": listener, "scope": scope, "active": True})
 
-        return len(self.listener)
+        return len(self.listener) # Poorly written listener_id returner
 
     def unregister_listener(self, listener_id):
         """
@@ -192,6 +200,7 @@ class EventPool():
                 None
         """
 
+        # Obvious
         self.listener[listener_id].active = False
 
     def remove_event(self, event):
@@ -205,6 +214,8 @@ class EventPool():
                 success (boolean)
         """
 
+        # Classical break-free element-property-based array element deleter
+        # Note: same as `self.remove_event_from_stack_id(event.pid)`
         i = 0
         res = False
 
@@ -227,6 +238,7 @@ class EventPool():
                 success (bolean)
         """
 
+        # Same as self.remove_event but with pid rather than the event
         i = 0
         res = False
 
