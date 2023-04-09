@@ -18,71 +18,89 @@ class GridGenerator():
         self.grid_size = (None, None)
         self.candy_nb = None
 
+    def __generate_random(self):
+        """
+            Generates a new random number
+        """
+
+        if self.candy_nb is None:
+            raise ValueError("Grid not initiated")
+
+        return randint(0, self.candy_nb-1)
+
     def __init_grid(self, size_x, size_y, candy_nb):
+        """
+            Inits the grid with half cells
+        """
         self.grid_size = (size_x, size_y)
-        self.grid = [[randint(1, candy_nb) for i in range(size_x)] for j in range(size_y)]
         self.candy_nb = candy_nb
+        self.grid = [[self.__generate_random() if (i%2==j%2) else None for i in range(size_x)]
+                     for j in range(size_y)]
 
-    def check_matches(self):
+    def __safe_access(self, x_pos, y_pos, grid=None, default=-1):
         """
-            check_matches: This function removes any vertical or horizontal alignement
-        """
-
-        # Check for horizontal matches
-        for y_pos in range(0, self.grid_size[1]):
-            for x_pos in range(0, self.grid_size[0]-4):
-                if self.grid[y_pos][x_pos] == self.grid[y_pos][x_pos+1] and \
-                        self.grid[y_pos][x_pos] == self.grid[y_pos][x_pos+2] and \
-                        self.grid[y_pos][x_pos] == self.grid[y_pos][x_pos+3]:
-
-                    self.grid[y_pos][x_pos+2] = None
-
-        # Check for vertical matches
-        for y_pos in range(0, self.grid_size[1]-4):
-            for x_pos in range(0, self.grid_size[0]):
-                if self.grid[y_pos][x_pos] == self.grid[y_pos+1][x_pos] and \
-                        self.grid[y_pos][x_pos] == self.grid[y_pos+2][x_pos] and \
-                        self.grid[y_pos][x_pos] == self.grid[y_pos+3][x_pos]:
-
-                    self.grid[y_pos+2][x_pos] = None
-
-    def check_gaps(self):
-        """
-            check_gaps: This function checks for any gaps and drops the cells where there is gaps
+            Access safely the matrix. Returns default if out of bounds
         """
 
-        for y_pos in range(self.grid_size[1]-1,-1,-1):
-            for x_pos in range(self.grid_size[0]):
-                if self.grid[y_pos][x_pos] is None:
-                    self.drop_tiles(x_pos, y_pos)
+        if grid is None:
+            grid = self.grid
 
-    def drop_tiles(self, x_pos, y_pos):
+        if x_pos < 0 or x_pos > len(grid[0])-1:
+            return default
+
+        if y_pos < 0 or y_pos > len(grid)-1:
+            return default
+
+        return grid[y_pos][x_pos]
+
+    def __populate_grid(self):
         """
-            drop_tiles: Drops the tiles at the pos
-        """
-
-        for colonne in range(y_pos,0,-1):
-            self.grid[colonne][x_pos] = self.grid[colonne-1][x_pos]
-
-        self.grid[0][x_pos] = None
-
-    def replace_none_start(self):
-        """
-            replace_none_start: Replace None values at the start
+            Populates the other half of the grid
         """
 
-        for y_pos in range(self.grid_size[1]-2):
-            for x_pos in range(self.grid_size[0]-2):
-                if self.grid[y_pos+1][x_pos+1] is None:
-                    n_generated=0
+        adjacence_matrix = [[0 for j in range(self.grid_size[0])]
+                             for i in range(self.grid_size[1])]
 
-                    while n_generated not in (self.grid[y_pos+2][x_pos+1],
-                                              self.grid[y_pos][x_pos+1],
-                                              self.grid[y_pos+1][x_pos],
-                                              self.grid[y_pos+1][x_pos+2]):
-                        n_generated = randint(1, self.candy_nb)
+        deltas = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        reduced_deltas = [(-1, 0), (0, -1)]
 
-                    self.grid[y_pos][x_pos] = n_generated
+        for (y_pos, mt_sl) in enumerate(self.grid):
+            for (x_pos, element) in enumerate(mt_sl):
+                # If we need to fill it
+                if element is None:
+                    # We only have to look at the top and to the left because bottom and right
+                    # aren't generated yet
+
+                    adjacence_array = [self.__safe_access(x_pos+dx, y_pos+dy)
+                                       for (dx, dy) in reduced_deltas]
+
+                    reverse_adjacence = [i for i in range(self.candy_nb)
+                                         if not i in adjacence_array]
+
+                    if len(reverse_adjacence) == 0:
+                        print("Fatal error. Stacktrace:")
+                        print(adjacence_matrix)
+                        print(reverse_adjacence)
+                        print(self.grid)
+
+                        return 1
+
+                    chosen_number = reverse_adjacence[randint(0, len(reverse_adjacence)-1)]
+
+                    self.grid[y_pos][x_pos] = chosen_number
+
+                    has_any = False
+
+                    for (delta_x, delta_y) in deltas:
+                        if self.__safe_access(x_pos+delta_x, y_pos+delta_y) == chosen_number:
+                            has_any = True
+                            adjacence_matrix[y_pos+delta_y][x_pos+delta_x] = 1
+
+                    if has_any:
+                        adjacence_matrix[y_pos][x_pos] = 1
+
+        return 0
+
 
     def init_sequence(self, size_x, size_y, candy_nb):
         """
@@ -98,11 +116,7 @@ class GridGenerator():
         """
 
         self.__init_grid(size_x, size_y, candy_nb)
-        self.check_matches()
-        self.check_gaps()
-        self.replace_none_start()
-
-        return self.grid
+        return self.__populate_grid()
 
     def populate_grid_manager(self, grid_manager):
         """
@@ -129,7 +143,16 @@ class GridGenerator():
                 None
         """
 
-        # Very poor implementation but works because python
-        self.grid = grid_manager.grid
-        self.replace_none_start()
-        grid_manager.grid = self.grid
+        # TODO
+
+if __name__ == "__main__":
+    # Just to test
+
+    GRID = GridGenerator()
+
+    RES = GRID.init_sequence(10, 15, 4)
+
+    if RES != 0:
+        print("Error :/")
+    else:
+        print(GRID.grid)
