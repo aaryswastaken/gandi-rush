@@ -6,32 +6,34 @@
 """
 
 from __future__ import absolute_import
-from tkinter import Tk, Canvas
+from tkinter import Canvas, StringVar, Label
 from random import randint
 from PIL import Image, ImageTk
 
 
+
 SPRITE = []
 
-def load_sprites():
+def load_sprites(sprite_home):
     """
         Loads the sprites
     """
 
     for i in ["PierreBleu", "PierreJaune", "PierreRouge", "PierreVerte", "animation_destruction"]:
-        SPRITE.append(ImageTk.PhotoImage(Image.open("../sprite/"+i+".png")
+        SPRITE.append(ImageTk.PhotoImage(Image.open(sprite_home+i+".png")
                                          .resize((48, 48), Image.NEAREST)))
 
 
-class WindowController(Tk):
+def configure_window(root):
     """
-    Objet désignant la fenêtre root
+    :param Fenetre TK:
+    :return None:
+    Configure la fenêtre
     """
-    def __init__(self):
-        super().__init__()
-        self["bg"] = "#73c2fa"
-        self.geometry("1200x800")
-        self.resizable(width=False, height=False)
+
+    root["bg"] = "#73c2fa"
+    root.geometry("1200x800")
+    root.resizable(width=False, height=False)
 
 
 class MenuPrincipal:
@@ -42,19 +44,20 @@ class MenuPrincipal:
     # Because this class manages tkinter things
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, root):
+    def __init__(self, root, sprite_home="../sprite/"):
         self.root = root
-        root.columnconfigure(0, weight=1)
+        self.jeu=FenetreDeJeu(self.root, sprite_home)
+        root.columnconfigure(0,)
         root.rowconfigure(0, weight=1)
         root.rowconfigure(1, weight=1)
         # Logo
-        self.original_logo = Image.open('../sprite/Logo.png').convert('RGB')
+        self.original_logo = Image.open(sprite_home+'Logo.png').convert('RGB')
         self.image_logo = ImageTk.PhotoImage(self.original_logo.resize((400, 300), Image.NEAREST))
         self.logo = Canvas(root, height=300, width=400, borderwidth=0, highlightthickness=0)
         self.logo.create_image(0, 0, image=self.image_logo, anchor='nw')
         # BoutonJouer
-        self.original_bouton1 = Image.open("../sprite/Bouton1.png")
-        self.original_bouton2 = Image.open("../sprite/Bouton2.png")
+        self.original_bouton1 = Image.open(sprite_home+"Bouton1.png")
+        self.original_bouton2 = Image.open(sprite_home+"Bouton2.png")
         self.image_bouton1 = ImageTk.PhotoImage(self.original_bouton1.resize((400, 200),
                                                                              Image.NEAREST))
         self.image_bouton2 = ImageTk.PhotoImage(self.original_bouton2.resize((400, 200),
@@ -65,8 +68,8 @@ class MenuPrincipal:
         self.bouton.bind("<Leave>", self.leave_bouton)
         self.bouton.bind("<Button-1>", self.bouton_jouer_click)
         self.bouton.focus_set()
-        self.logo.grid(row=0, column=0, sticky="n")
-        self.bouton.grid(row=1, column=0, sticky="")
+        self.logo.grid(row=0, column=1, sticky="n")
+        self.bouton.grid(row=1, column=1, sticky="n")
 
     def enter_bouton(self, _):
         """
@@ -98,7 +101,7 @@ class MenuPrincipal:
         """
 
         self.leave_menu(None)
-        FenetreDeJeu(self.root).lancer_jeu()
+        self.jeu.lancer_jeu()
 
 
 class FenetreDeJeu():
@@ -106,22 +109,29 @@ class FenetreDeJeu():
     Decris la fenêtre de jeu
     """
 
-    def __init__(self, root):
+    def __init__(self, root, sprite_home):
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=0)
         root.rowconfigure(1, weight=0)
         root.columnconfigure(16, weight=1)
+        self.score = None
         self.root = root
         self.grille_element = []
         self.focus = (None, None)
         self.grille_de_base = genere_alea(3)
+        load_sprites(sprite_home)
 
-        load_sprites()
 
     def lancer_jeu(self):
         """
         Initialise le jeu
+
         """
+        self.score = StringVar()
+        text_score = Label(textvariable=self.score, bg="#73c2fa", font=("TkTooltipFont",25),
+                           fg='#45283c')
+        self.score.set("Score : 0")
+        text_score.grid(row=1, column=0)
 
         self.root.bind("<Button-3>", lambda x: self.backgroundclick())
         for (i, _element) in enumerate(self.grille_de_base):
@@ -140,7 +150,6 @@ class FenetreDeJeu():
         """
         Evenement si un clique hors grille est réalisé
         """
-
         if self.focus != (None, None):
             self.off_focus()
             self.focus = (None, None)
@@ -149,6 +158,10 @@ class FenetreDeJeu():
         """
         Evenement si une gemme est cliqué
         """
+
+        # Until is used
+        if value is None:
+            pass
 
         if self.focus == (None, None):
             self.focus = (i, j)
@@ -164,8 +177,6 @@ class FenetreDeJeu():
             self.off_focus()
             self.focus = (None, None)
 
-        print(f"je suis une gemme de type { {0:'Bleu',1:'Jaune',2:'Rouge',3:'Verte'}[value]} "+\
-                "aux coordonné {i} {j}")
 
     def on_focus(self, i, j):
         """
@@ -185,7 +196,6 @@ class FenetreDeJeu():
 
         i = self.focus[0]
         j = self.focus[1]
-        print(i, j)
         if not(j in (0, 14) or i in (0, 14)):
             self.grille_element[int(i-1)][int(j)].config(bg="#73c2fa")
             self.grille_element[int(i+1)][int(j)].config(bg="#73c2fa")
@@ -217,8 +227,3 @@ def genere_alea(nb_max):
     Fonction temporaire
     """
     return [[randint(0, nb_max) for i in range(15)] for j in range(15)]
-
-if __name__ == "__main__":
-    FENETRE = WindowController()
-    MENU = MenuPrincipal(FENETRE)
-    MENU.root.mainloop()
