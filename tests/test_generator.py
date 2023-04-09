@@ -3,8 +3,11 @@
 """
 
 from random import randint
+import pytest
+
 from lib.generator import GridGenerator
 
+@pytest.mark.timeout(15)
 def test_generator_1000():
     """
         Test the generator on 1000 occurences
@@ -45,8 +48,10 @@ def test_generator_1000():
         c_res = check_any_adjacence(grid_instance.grid)
 
         if not c_res:
-            print("  Test passed")
+            print(f"  {i+1} Test passed")
             i += 1
         else:
-            print("  Test failed")
+            print(f"  {i+1} Test failed")
             one_failed = True
+
+    assert not one_failed

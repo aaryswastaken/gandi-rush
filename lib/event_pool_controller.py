@@ -254,6 +254,8 @@ class Event():
     TYPE_GRID_PERMUTATION_ERROR = 10
     TYPE_GRID_TICK_ERROR = 11
 
+    TYPE_EXIT_ALL = 99
+
     def __init__(self, dest, msg_type, payload):
         # 0: ui -> grid manager
         # 1: grid manager -> ui
