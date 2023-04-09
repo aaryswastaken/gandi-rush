@@ -16,6 +16,7 @@ The EventPool class is not called as a thread rather is a shared common memory a
  - ~~`UI_ACTION`: Useless and deprecated~~
  - `SCORE_UPDATE`: When the score updates, this event is called from the Grid Manager to the UI. The payload looks like this: `{"score": int}` with score being very originally the score.
  - `GEN_TRIGGER`: This event is called by the UI towards the Grid manager, asking it to call for a grid generation. The payload contains the size. The payload looks like this: `{"grid_size": tuple<int>}` where the grid\_size is expressed in the usual coordinates expression
+ - `EXIT_ALL` the exit event for all threads. No payload
 
 #### Note on grid:
 
