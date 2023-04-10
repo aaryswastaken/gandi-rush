@@ -161,18 +161,29 @@ class GridGenerator():
         grid_manager.grid = self.grid
         grid_manager.grid_size = self.grid_size
 
-    def fill_grid_manager_nones(self, grid_manager):
+#     def fill_grid_manager_nones(self, grid_manager):
+#         """
+#             After grid_manager's gravity tick we need to regenerate new cells
+#
+#             Parameters:
+#                 grid_manager (GridManager)
+#
+#             Returns:
+#                 None
+#         """
+#
+#         # TODO
+
+    def generate_cell(self):
         """
-            After grid_manager's gravity tick we need to regenerate new cells
-
-            Parameters:
-                grid_manager (GridManager)
-
-            Returns:
-                None
+            Generates a random cell for the grid manager
         """
 
-        # TODO
+        try:
+            return self.__generate_random()
+        except ValueError:
+            return -1 # Because it hasn't been initialized yet
+
 
 if __name__ == "__main__":
     # Just to test
