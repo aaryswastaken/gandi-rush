@@ -28,24 +28,31 @@ def default_val(val, default=0):
         Returns:
             res (any)
     """
+
+    # This wrapper is pretty useful as it is used sevral times and increase code
+    # lisibility greatly
     return val if val is not None else default
 
 def explore_adj(_grille, pos_x, pos_y, scanned_value):
     """
-        explore_adj: Renvoie True si la valeur du tableau aux coordonnees indiquees est celle
-            requise. Renvoie False si l'index existe pas
-        Parametres:
-            _grille (t[][]): Le tableau a chercher
-            pos_x (int): la position en x
-            pos_y (int): la position en y
-            scanned_value (t): La valeur comparee
-        Renvoie:
-            out (bool): Si la condition est complete
+        explore_adj: Returns the val if coordinates are in bound and the value is the same as the
+            value we want to compate it to, else False
+
+        Parameters:
+            _grille (t[][]): Search array
+            pos_x (int): x coordinates
+            pos_y (int): y coordinate
+            scanned_value (t): The value we compare it to
+
+        Returns:
+            out (bool): If condition is met
     """
 
+    # If negative, we prevent array looping
     if pos_x < 0 or pos_y < 0:
         return False
 
+    # This imprementation is trash but it works: if out of bound, return False else return the val
     try:
         return _grille[pos_y][pos_x] == scanned_value
     except IndexError:
@@ -58,6 +65,7 @@ class GridManager(Thread):
     """
 
     def __init__(self, event_pool, generator, candy_count=4, animation_wait_time=0):
+        # Initialise stuff, we don't care
         super().__init__()
         self.grid = []
         self.grid_size = ()
@@ -81,6 +89,7 @@ class GridManager(Thread):
                 None
         """
 
+        # Generate the grid and refresh its cache
         self.generator.init_sequence(size_x, size_y, self.candy_count)
         self.generator.populate_grid_manager(self)
 
@@ -89,11 +98,12 @@ class GridManager(Thread):
             Stops the thread
         """
 
+        # Set the stop flag to True
         self.thread_stop_flag = True
 
     def __event_tick(self, payload):
         """
-            __event_tick: Function called every tick to append to the pool permutation
+            __event_tick: Function called every tick to call for an update
 
             Parameters:
                 payload (object):
@@ -101,6 +111,7 @@ class GridManager(Thread):
                     "animation_id" (int): animation_id
         """
 
+        # This build an event towards the UI calling an update with the provided payload
         event = Event(1, Event.TYPE_UI_UPDATE,
                       {"update_type": 1, "coordinates": payload.coordinates,
                        "new_gem": payload.animation_id})
@@ -112,20 +123,26 @@ class GridManager(Thread):
         """
 
         while not self.thread_stop_flag:
+            # Fetch the next event towards the manager
             event = self.event_pool.next_and_delete(0)
 
+            # Because pylint asks it
             if event is not None:
+                # If is a permutation
                 if event.msg_type == Event.TYPE_GRID_PERMUTATION:
                     permutation = event.payload["permuation"]
 
+                    # If the payload is not well built, send an Error event
                     if len(permutation) != 2 or isinstance(permutation, tuple):
                         error_event = Event(1, Event.TYPE_GRID_PERMUTATION_ERROR,
                                             {"permutation": permutation})
                         self.event_pool.push(error_event)
 
+                    # Do the actual permutation
                     res = self.tick(permutation, animation_tick=self.__event_tick,
                                     animation_wait_time=self.animation_wait_time)
 
+                    # If an error has been encountered, send an Error event
                     if res != 1:
                         error_event = Event(1, Event.TYPE_GRID_TICK_ERROR,
                                             {"permutation": permutation, "res": res})
@@ -140,13 +157,14 @@ class GridManager(Thread):
                     # garbage collection in the method
                     self.stop()
 
-    # Following code is going to be yoinked from sujet_origine.py
     def permute(self, permutation):
         """
-            permute: Permute (assume que la permutation est légale)
-            Parametres:
+            permute: Do the permutation, assuming it is legal
+
+            Parameters:
                 permutation (tuple<tuple<int>>)
-            Renvoie:
+
+            Returns:
                 None
         """
 
@@ -159,13 +177,20 @@ class GridManager(Thread):
 
     def transpose(self):
         """
-            transpose: Transpose la grille
-            Parametres:
+            transpose: Transpose the grid
+
+            Parameters:
                 None
-            Renvoie:
-                transposed (int[][]): La grille transposée
+
+            Returns:
+                transposed (int[][]): Transposed grid
         """
 
+        # Transposes the matrix (rotation along the diagonal)
+
+        # This operation is used to speed things up because the column will now be
+        # represented as a line, thus the gravity ticking will be easier for the cpu
+        # in term of reference accessing
         transposed = [[] for _i in range(len(self.grid[0]))]
 
         for ligne in self.grid:
@@ -176,13 +201,17 @@ class GridManager(Thread):
 
     def from_transposed(self, transposed):
         """
-            from_transposed: Remplace la grille active par la transposition inverse
-            Parametres:
-                transposed (int[][]): Une matrice transposée
-            Renvoie:
+            from_transposed: Opposite of transpose: takes a traposed matrix and turns it back
+                into a normal matrix
+
+            Parameterts:
+                transposed (int[][]): A transposed matrix
+
+            Returns:
                 None
         """
 
+        # Same rotation technically, just not the same assignements
         self.grid = [[] for _i in range(len(transposed[0]))]
 
         for ligne in transposed:
@@ -191,22 +220,27 @@ class GridManager(Thread):
 
     def clone(self):
         """
-            clone: Clone la grille pour sauvegarde
-            Parametres:
+            clone: Clones the grid for comparison
+
+            Parameters:
                 None
-            Renvoie:
-                grille_clone (int[][]): Le clone de la grille
+
+            Returns:
+                cloned_grid (int[][]): Grid's clone
         """
 
+        # Returns a clone of the grid, used to see if there is a modification
         return [list(sl) for sl in self.grid]
 
     def do_compare(self, grille):
         """
-            do_compare: Compare la grille a une autre pour voir si il y a une difference
-            Parametres:
-                grille (int[][]): La grille a comparer
-            Renvoie:
-                res (bool): True si différentes
+            do_compare: Compare parameter's grid with self's
+
+            Parameters:
+                grid (int[][]): The grid we compare against
+
+            Returns§:
+                res (bool): True if different
         """
 
         return any(any(e[0] != e[1] for e in zip(*grilles_slice))
@@ -215,12 +249,12 @@ class GridManager(Thread):
     def detecte_coordonnees_combinaison(self, i, j):
         """
             detecte_coordonnees_combinaison: Renvoie une liste des item adjacent de meme nature
-            Note: Il est absurde d'écrire cette fonction en dehors d'une classe mais c'est pour
-            le respect du sujet
-            Parametres:
-                grille (Grille): la grille
+
+            Parameters:
+                grille (Grille): the grid
                 i (int): coordonnees en x
                 j (int): coordonnees en y
+
             Renvoie:
                 out (tuple<int>[]): les cases adjacentes
         """
@@ -262,50 +296,51 @@ class GridManager(Thread):
 
     def detecte_combinaison(self, i, j):
         """
-            detecte_combinaison: Renvoie True si une combinaison horizontale
-                ou verticale est présente
+            detecte_combinaison: Returns True if there is a vertical or horizontal match
 
-            Parametres:
-                grille (Grille): la grille
-                i (int): coordonnees en x
-                j (int): coordonnees en y
+            Parameters:
+                i (int): x coordinates
+                j (int): y coordinates
 
             Renvoie:
-                res (bool): Le resultat
+                res (bool): Result
         """
 
+        # Value of the interest cell
         actual_type = self.grid[j][i]
 
-        # print(f"Testing for ({i}, {j})")
 
+        # Testing for horizontal matches
         if explore_adj(self.grid, i-1, j, actual_type) and \
                 explore_adj(self.grid, i+1, j, actual_type):
             return True
 
+        # Testing for vertical matches
         if explore_adj(self.grid, i, j-1, actual_type) and \
                 explore_adj(self.grid, i, j+1, actual_type):
             return True
 
+        # If no matches, return False
         return False
 
-    def tick_gravitee(self, animation_tick=lambda payload: None):
+    def gravity_tick(self, animation_tick=lambda payload: None):
         """
-            tick_gravitee: Effectue la gravité (fait tomber les trucs)
+            gravity_tick: Gravityyyy
 
             Parametres:
                 None
 
             Renvoie:
                 None
-
-            Notes:
-                -1 dans self.grid indique une case vide qu'il faut combler
         """
 
+        # We take the grid's transposition
         transposed = self.grid.transpose()
 
+        # We initialise new grid in the transposed form
         mutated_transposed = []
 
+        # For every line of the transposed aka every column
         for (col_id, line) in enumerate(transposed):
             if -1 in line: # If not, skip
                 i = len(line) - 1
@@ -322,39 +357,29 @@ class GridManager(Thread):
                         an_id += default_val(line[i], default=0) * 10
                         an_id += default_val(line[i-1], default=0) if i-1 >= 0 else 0
 
+                        # Tick the animation
                         animation_tick({"coordinates": (i, col_id),
                                         "animation_id": an_id})
 
+                        # Fill with None
                         new_line = [None, *line[0:i], *line[(i+1):]]
                         line = new_line
                     i -= 1
 
-                # Repopulate
-
-                # This method doesnt work because of an index error on line[i]
-
-                # i = 0
-                # while i < len(line) and line[i] == -1:
-                #     line[i] = self.grid.genere_case()
-                #     i += 1
-
-                # This method works only if EVERY -1 has been displaced:
-                # self.generator.generate_cell() was a temporary method
-                # new_line = [self.generator.generate_cell() if e is None else e for e in line]
-                # line = new_line
-
+            # Append the new line
             mutated_transposed.append(line)
 
+        # De-transpose
         self.grid.from_transposed(mutated_transposed)
 
-        # new method:
+        # Repopulate
         self.generator.fill_grid_manager_nones(self)
 
         return 0
 
     def __routine(self, permutation, animation_tick=lambda payload: None, solo=False):
         """
-            __routine (private): Tick mais pour le mode 3
+            __routine (private): Wrapper for the deletion
         """
 
         to_delete_array = []
@@ -368,136 +393,139 @@ class GridManager(Thread):
             to_delete1 = self.detecte_coordonnees_combinaison(permutation[1][0],
                                                               permutation[1][1])
 
-            # Can be optimized
+            # If in the whole group, there is something that has a 3 alignement
             is_detected0 = any(self.detecte_combinaison(coords[0], coords[1])
                                for coords in to_delete0)
             is_detected1 = any(self.detecte_combinaison(coords[0], coords[1])
                                for coords in to_delete1)
 
-            # This line has been removed because if there is an alignement, there must be
-            # more than 3 tangent pieces
+            if not (is_detected0 or is_detected1):  # If there is no alignement on both permuted
+                self.grid.permute(permutation)  # Reset move
+                return 2  # Useless move
 
-            # if len(to_delete0) < 3 and len(to_delete1) < 3:
-
-            if not (is_detected0 or is_detected1): # If there is no alignement on both permuted
-                # Pas possible
-                self.grid.permute(permutation) # On remets comme de base
-                return 2
-
-            # to_delete_array = [to_delete0, to_delete1]
-            if is_detected0:
+            if is_detected0: # If there is an alignement on group zero, delete everything
                 to_delete_array.append(to_delete0)
-            if is_detected1:
+            if is_detected1: # Same with one
                 to_delete_array.append(to_delete1)
-
         else:
-            # Utilisé dans le check global pour le refresh de la grille
+            # If is solo aka we only check for this cell
             to_delete_array = [
                 self.detecte_coordonnees_combinaison(permutation[0][0], permutation[0][1])
             ]
 
+        # For every cell group we have to delete
         for to_delete in to_delete_array:
-            if len(to_delete) >= 3:
-                for coords in to_delete:
+            if len(to_delete) >= 3: # Little sanity check
+                for coords in to_delete: # For every deletion we have to operate
+                    # Trigger an animation
                     animation_tick({"coordinates": (coords[0], coords[1]),
                                     "animation_id": 100+self.grid[coords[1]][coords[0]]})
 
+                    # Do the actual deletion
                     self.grid[coords[1]][coords[0]] = None
 
-        return 0
+        return 0 # If everything went fine, return 0
 
     def __refresh(self, animation_tick=lambda payload: None, animation_wait_time=0):
         """
-            __refresh (private): Routine de rafraichissement par le mode 3
+            __refresh (private): Wrapper for tick + gravity
         """
 
-        ancienne_grille = self.grid.clone()
-        premiere = True
+        old_grid = self.grid.clone()
+        first = True
 
-        while self.grid.do_compare(ancienne_grille) or premiere:
-            premiere = False
+        while self.grid.do_compare(old_grid) or first:
+            first = False
 
-            ancienne_grille = self.grid.clone()
+            old_grid = self.grid.clone()
+
+            # HEAVILY UNOPTIMIZED
+
+            # For every cell ...
             for (pos_y, grille_sl) in enumerate(self.grid):
                 for (pos_x, _e) in enumerate(grille_sl):
                     # If there is a horizontal or vertical alignement
                     if self.detecte_combinaison(pos_x, pos_y):
+                        # If so, trigger a deletion of the group
                         self.__routine([(pos_x, pos_y)], animation_tick=animation_tick,
                                        solo=True)
 
+            # Do the animation stuff
+            sleep(animation_wait_time / 1000)
+            self.gravity_tick(animation_tick=animation_tick)
             sleep(animation_wait_time / 1000)
 
-            self.tick_gravitee(animation_tick=animation_tick)
-
-            sleep(animation_wait_time / 1000)
-
-        return 0
+        return 0 # If everything is fine, return 0
 
 
     def __tick(self, permutation, animation_tick=lambda payload: None, animation_wait_time=0):
         """
-            __tick (private): Wrapper pour __routine_tick_mode_3
+            __tick (private): Wrapper for first tick + gravity then the refresh
         """
 
+        # Do the actual move
         res = self.__routine(permutation, animation_tick=animation_tick)
         if res != 0:
-            return res
+            return res # If there is any error, returns it
 
+        # Do a lil animation shit
+        sleep(animation_wait_time / 1000)
+        self.gravity_tick(animation_tick=animation_tick)
         sleep(animation_wait_time / 1000)
 
-        self.tick_gravitee(animation_tick=animation_tick)
-
-        sleep(animation_wait_time / 1000)
-
-        # Doit refresh toute la grille (doit opti)
+        # Call for the refresh
         res = self.__refresh(animation_tick, animation_wait_time)
 
-        return res
+        return res # If there is any error, returns it
 
 
     def is_legal_permutation(self, permutation):
         """
-            is_legal_permutation: Indique si la permutation est légale d'un point de vue
-                grille (ne peut dépasser les bornes)
+            is_legal_permutation: Compute if it is a legal permutation in term of coordinates
 
             Parametres:
-                permutation (tuple<tuple<int>>): deux cases a tester
+                permutation (tuple<tuple<int>>): Cell to test
 
             Renvoie:
-                possible (bool): si la permutation est possible
+                possible (bool): Result
         """
 
+        # If the coordinates are out of bound, return False
         for permut in permutation:
             if permut[0] < 0 or permut[1] < 0 or \
                 permut[0] >= self.grid_size[0] or permut[1] >= self.grid_size[1]:
                 return False
 
+        # The squared distance
         distance_manhattan = abs(permutation[0][0] - permutation[1][0]) + \
             abs(permutation[0][1] - permutation[1][1])
 
+        # If they are not vertically or horizontally aligned, return False else True
         return distance_manhattan == 1
 
     def tick(self, permutation, animation_tick=lambda payload: None,
              animation_wait_time=0):
         """
-            tick: Actualise la grille selon le mode de jeu
+            tick: Do the wrapper: If it is a legal move, do the move
 
             Parametres:
-                permutation (tuple<tuple<int>>): deux cases permutées
+                permutation (tuple<tuple<int>>): Permutation to trigger
                 animation_tick (function(payload: object)): Animation tick
                 animation_wait_time (int): The period of the animation (ms)
 
             Renvoie:
-                state (int): Le code de retour
+                state (int): Return code
 
             Note:
                 state:
                     - 0 = ok
-                    - 1 = illégal
-                    - 2 = légal mais aucun résultat (annulé)
+                    - 1 = illegal
+                    - 2 = legal but useless
         """
 
+        # If is illegalm return 1
         if not self.is_legal_permutation(permutation):
             return 1
 
+        # Else, proceed with the move
         return self.__tick(permutation, animation_tick, animation_wait_time)

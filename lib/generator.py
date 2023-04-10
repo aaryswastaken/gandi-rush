@@ -18,71 +18,115 @@ class GridGenerator():
         self.grid_size = (None, None)
         self.candy_nb = None
 
+    def __generate_random(self):
+        """
+            Generates a new random number
+        """
+
+        # If we have no informations about what to chose from, raise an error
+        if self.candy_nb is None:
+            raise ValueError("Grid not initiated")
+
+        return randint(0, self.candy_nb-1)
+
     def __init_grid(self, size_x, size_y, candy_nb):
+        """
+            Inits the grid with half cells
+        """
         self.grid_size = (size_x, size_y)
-        self.grid = [[randint(1, candy_nb) for i in range(size_x)] for j in range(size_y)]
         self.candy_nb = candy_nb
+        # if i%2 == j%2 allows to fill half of the cells with random values in a diagonal pattern
+        self.grid = [[self.__generate_random() if (i%2==j%2) else None for i in range(size_x)]
+                     for j in range(size_y)]
 
-    def check_matches(self):
+    def __safe_access(self, x_pos, y_pos, grid=None, default=-1):
         """
-            check_matches: This function removes any vertical or horizontal alignement
-        """
-
-        # Check for horizontal matches
-        for y_pos in range(0, self.grid_size[1]):
-            for x_pos in range(0, self.grid_size[0]-4):
-                if self.grid[y_pos][x_pos] == self.grid[y_pos][x_pos+1] and \
-                        self.grid[y_pos][x_pos] == self.grid[y_pos][x_pos+2] and \
-                        self.grid[y_pos][x_pos] == self.grid[y_pos][x_pos+3]:
-
-                    self.grid[y_pos][x_pos+2] = None
-
-        # Check for vertical matches
-        for y_pos in range(0, self.grid_size[1]-4):
-            for x_pos in range(0, self.grid_size[0]):
-                if self.grid[y_pos][x_pos] == self.grid[y_pos+1][x_pos] and \
-                        self.grid[y_pos][x_pos] == self.grid[y_pos+2][x_pos] and \
-                        self.grid[y_pos][x_pos] == self.grid[y_pos+3][x_pos]:
-
-                    self.grid[y_pos+2][x_pos] = None
-
-    def check_gaps(self):
-        """
-            check_gaps: This function checks for any gaps and drops the cells where there is gaps
+            Access safely the matrix. Returns default if out of bounds
         """
 
-        for y_pos in range(self.grid_size[1]-1,-1,-1):
-            for x_pos in range(self.grid_size[0]):
-                if self.grid[y_pos][x_pos] is None:
-                    self.drop_tiles(x_pos, y_pos)
+        # default grid is the one that is owned by the class
+        if grid is None:
+            grid = self.grid
 
-    def drop_tiles(self, x_pos, y_pos):
+        # If the coordinates are out of bound, return the default
+        if x_pos < 0 or x_pos > len(grid[0])-1:
+            return default
+
+        if y_pos < 0 or y_pos > len(grid)-1:
+            return default
+
+        # If the coordinates are in bound, return the actual value
+        return grid[y_pos][x_pos]
+
+    def __populate_grid(self):
         """
-            drop_tiles: Drops the tiles at the pos
+            Populates the other half of the grid
         """
 
-        for colonne in range(y_pos,0,-1):
-            self.grid[colonne][x_pos] = self.grid[colonne-1][x_pos]
+        # This solution has been described in issue#39
 
-        self.grid[0][x_pos] = None
+        # Definition of the adjacence matrix. This matrix defines if its corresponding cell
+        # has already a cell with the same number next to it
+        adjacence_matrix = [[0 for j in range(self.grid_size[0])]
+                             for i in range(self.grid_size[1])]
 
-    def replace_none_start(self):
-        """
-            replace_none_start: Replace None values at the start
-        """
+        # Those arrays defines the directions in which we check
+        # Notice that reduced_deltas has only half of them. Because we fill the cell from left to
+        # right from top to bottom, we only have to check for adjacence in the already filled cells
+        # aka top and left
+        deltas = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        reduced_deltas = [(-1, 0), (0, -1)]
 
-        for y_pos in range(self.grid_size[1]-2):
-            for x_pos in range(self.grid_size[0]-2):
-                if self.grid[y_pos+1][x_pos+1] is None:
-                    n_generated=0
+        for (y_pos, mt_sl) in enumerate(self.grid):
+            for (x_pos, element) in enumerate(mt_sl):
+                # If we need to fill it
+                if element is None:
+                    # We only have to look at the top and to the left because bottom and right
+                    # aren't generated yet
 
-                    while n_generated not in (self.grid[y_pos+2][x_pos+1],
-                                              self.grid[y_pos][x_pos+1],
-                                              self.grid[y_pos+1][x_pos],
-                                              self.grid[y_pos+1][x_pos+2]):
-                        n_generated = randint(1, self.candy_nb)
+                    # The adjacence array defines the cell type that are already filled in the
+                    # neighborhood
+                    adjacence_array = [self.__safe_access(x_pos+dx, y_pos+dy)
+                                       for (dx, dy) in reduced_deltas]
 
-                    self.grid[y_pos][x_pos] = n_generated
+                    # Reverse adjacence is an array in which we can randomly and freely pick
+                    # the number that will be affected to the working cell
+                    reverse_adjacence = [i for i in range(self.candy_nb)
+                                         if not i in adjacence_array]
+
+                    if len(reverse_adjacence) == 0:
+                        # If the reverse_adjacence is empty, there is an issue and so we return
+                        # one as an error indicator
+
+                        print("Fatal error. Stacktrace:")
+                        print(adjacence_matrix)
+                        print(reverse_adjacence)
+                        print(self.grid)
+
+                        return 1
+
+                    # We just chose the number
+                    chosen_number = reverse_adjacence[randint(0, len(reverse_adjacence)-1)]
+
+                    self.grid[y_pos][x_pos] = chosen_number  # apply it
+
+                    # Now we refresh the adjacence matrix
+                    has_any = False
+
+                    # first for the adjacent cell ...
+                    for (delta_x, delta_y) in deltas:
+                        if self.__safe_access(x_pos+delta_x, y_pos+delta_y) == chosen_number:
+                            has_any = True
+                            adjacence_matrix[y_pos+delta_y][x_pos+delta_x] = 1
+
+                    # ... and if one of them is a match with the working cell, the working
+                    # cell must also be a match
+                    if has_any:
+                        adjacence_matrix[y_pos][x_pos] = 1
+
+        # If no errors have been encountered, return 0 as the default code
+        return 0
+
 
     def init_sequence(self, size_x, size_y, candy_nb):
         """
@@ -97,12 +141,10 @@ class GridGenerator():
                 grid (int[][])
         """
 
-        self.__init_grid(size_x, size_y, candy_nb)
-        self.check_matches()
-        self.check_gaps()
-        self.replace_none_start()
+        # This function is just a wrapper of the 2-phased generator
 
-        return self.grid
+        self.__init_grid(size_x, size_y, candy_nb) # generate the full random, half empty grid
+        return self.__populate_grid() # populate the grid. If any error, return them
 
     def populate_grid_manager(self, grid_manager):
         """
@@ -115,21 +157,42 @@ class GridGenerator():
                 None
         """
 
+        # This just updates the grid manager with these informations
         grid_manager.grid = self.grid
         grid_manager.grid_size = self.grid_size
 
-    def fill_grid_manager_nones(self, grid_manager):
+#     def fill_grid_manager_nones(self, grid_manager):
+#         """
+#             After grid_manager's gravity tick we need to regenerate new cells
+#
+#             Parameters:
+#                 grid_manager (GridManager)
+#
+#             Returns:
+#                 None
+#         """
+#
+#         # TODO
+
+    def generate_cell(self):
         """
-            After grid_manager's gravity tick we need to regenerate new cells
-
-            Parameters:
-                grid_manager (GridManager)
-
-            Returns:
-                None
+            Generates a random cell for the grid manager
         """
 
-        # Very poor implementation but works because python
-        self.grid = grid_manager.grid
-        self.replace_none_start()
-        grid_manager.grid = self.grid
+        try:
+            return self.__generate_random()
+        except ValueError:
+            return -1 # Because it hasn't been initialized yet
+
+
+if __name__ == "__main__":
+    # Just to test
+
+    GRID = GridGenerator()
+
+    RES = GRID.init_sequence(10, 15, 3)
+
+    if RES != 0:
+        print("Error :/")
+    else:
+        print(GRID.grid)

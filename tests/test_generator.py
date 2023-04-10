@@ -40,9 +40,12 @@ def test_generator_1000():
     while i <= n_test and not one_failed:
         grid_instance = GridGenerator()
 
-        r_grid = grid_instance.init_sequence(randint(10, 30), randint(10, 30), randint(4, 5))
+        res = grid_instance.init_sequence(randint(10, 30), randint(10, 30), randint(3, 5))
 
-        c_res = check_any_adjacence(r_grid)
+        if res != 0:
+            one_failed = True
+
+        c_res = check_any_adjacence(grid_instance.grid)
 
         if not c_res:
             print(f"  {i+1} Test passed")
