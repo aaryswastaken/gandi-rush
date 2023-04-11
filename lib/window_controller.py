@@ -6,7 +6,7 @@
 """
 
 from __future__ import absolute_import
-from tkinter import Canvas, StringVar, Label
+from tkinter import Canvas, StringVar, Label, Tk
 from random import randint
 from PIL import Image, ImageTk
 
@@ -44,7 +44,7 @@ class MenuPrincipal:
     # Because this class manages tkinter things
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, root, sprite_home="../sprite/"):
+    def __init__(self, root, grille ,sprite_home="../sprite/"):
         self.root = root
         self.jeu=FenetreDeJeu(self.root, sprite_home)
         root.columnconfigure(0,)
@@ -227,3 +227,10 @@ def genere_alea(nb_max):
     Fonction temporaire
     """
     return [[randint(0, nb_max) for i in range(15)] for j in range(15)]
+def main_loop(event_pool,sprite_home,grille):
+    window = Tk()
+    configure_window(window)
+    menu = MenuPrincipal(window, grille, sprite_home=sprite_home)
+    menu.root.mainloop()
+
+#main_loop("e","../sprite/",genere_alea(4))
