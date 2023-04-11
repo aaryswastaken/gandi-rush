@@ -9,7 +9,7 @@ from tkinter import Tk
 
 from lib.event_pool_controller import EventPool
 from lib.grid_controller import GridManager
-from lib.window_controller import main_loop , genere_alea
+import lib.window_controller
 from lib.generator import GridGenerator
 
 if __name__ == "__main__":
@@ -19,4 +19,4 @@ if __name__ == "__main__":
     grid_controller = GridManager(event_pool, generator, animation_wait_time=150)
     grid_controller.start()
 
-    main_loop(event_pool,"./sprite/",genere_alea(3))
+    lib.window_controller.main_loop(event_pool,"./sprite/",lib.window_controller.genere_alea(3))

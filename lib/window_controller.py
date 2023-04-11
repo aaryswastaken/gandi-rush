@@ -6,22 +6,24 @@
 """
 
 from __future__ import absolute_import
+
+import os
 from tkinter import Canvas, StringVar, Label, Tk
 from random import randint
 from PIL import Image, ImageTk
+from threading import Thread
+from os import listdir
 
-
-
-SPRITE = []
+SPRITE = {}
 
 def load_sprites(sprite_home):
     """
         Loads the sprites
     """
 
-    for i in ["PierreBleu", "PierreJaune", "PierreRouge", "PierreVerte", "animation_destruction"]:
-        SPRITE.append(ImageTk.PhotoImage(Image.open(sprite_home+i+".png")
-                                         .resize((48, 48), Image.NEAREST)))
+    for i in os.listdir(sprite_home):
+        print(i)
+        SPRITE[i]=(ImageTk.PhotoImage(Image.open(sprite_home+i).resize((48, 48), Image.NEAREST)))
 
 
 def configure_window(root):
@@ -138,7 +140,7 @@ class FenetreDeJeu():
             ligne_element = []
             for j in range(len(self.grille_de_base[0])):
                 tmp = Canvas(height=50, width=50, bd=0, highlightthickness=0, bg="#73c2fa")
-                tmp.create_image(0, 0, image=SPRITE[self.grille_de_base[i][j]],
+                tmp.create_image(0, 0, image=SPRITE["00"+str(self.grille_de_base[i][j])+".png"],
                                  anchor="nw", tag="nw")
                 tmp.grid(row=i+1, column=j+1, padx=1, pady=1)
                 tmp.bind("<Button-1>", lambda x, _i=i, _j=j:
@@ -210,7 +212,7 @@ class FenetreDeJeu():
 
         for i, j in liste_pos:
             self.grille_element[i][j].delete("nw")
-            self.grille_element[i][j].create_image(0, 0, image=SPRITE[self.grille_de_base[i][j]],
+            self.grille_element[i][j].create_image(0, 0, image=SPRITE["00"+str(self.grille_de_base[i][j])+".png"],
                                                    anchor="nw", tag="nw")
 
     def destroy(self, i, j):
@@ -226,11 +228,12 @@ def genere_alea(nb_max):
     """
     Fonction temporaire
     """
-    return [[randint(0, nb_max) for i in range(15)] for j in range(15)]
+    return [[randint(1, nb_max+1) for i in range(15)] for j in range(15)]
 def main_loop(event_pool,sprite_home,grille):
     window = Tk()
     configure_window(window)
     menu = MenuPrincipal(window, grille, sprite_home=sprite_home)
     menu.root.mainloop()
 
-#main_loop("e","../sprite/",genere_alea(4))
+if __name__ == "__main__":
+    main_loop("e","../sprite/",genere_alea(4))
