@@ -235,9 +235,9 @@ def genere_alea(nb_max):
 def main_loop(event_pool,sprite_home,grid_manager):
     window = Tk()
     configure_window(window)
-    event_pool.push(Event(0,"GEN_TRIGGER",(15,15)))
+    event_pool.push(Event(0,Event.TYPE_GEN_TRIGGER,{"grid_size":(15,15)}))
     sleep(0.5)
-    tab=grid_manager.grid
+    tab = event_pool.next(1).payload["grid"]
     print(tab)
-    menu = MenuPrincipal(window, tab , event_pool, sprite_home=sprite_home)
+    menu = MenuPrincipal(window, tab, event_pool, sprite_home=sprite_home)
     menu.root.mainloop()

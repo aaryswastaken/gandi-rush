@@ -118,7 +118,6 @@ class EventPool():
             Returns
                 id (int): PooledEvent id
         """
-
         # Compute the id of the pooled event (pool id = pid)
         pid = len(self.stack) + 1
         pooled_event = event.derive_pooled_event(pid)  # Deive a pooled event
