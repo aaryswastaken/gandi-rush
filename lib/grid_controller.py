@@ -152,6 +152,8 @@ class GridManager(Thread):
                     dimensions = event.payload["grid_size"]
 
                     self.init_grid(dimensions[0], dimensions[1])
+
+                    self.inject_grid()
                 elif event.msg_type == Event.TYPE_EXIT_ALL:
                     # Using stop instead of self.stop_flag = True in case we do some
                     # garbage collection in the method
@@ -529,3 +531,12 @@ class GridManager(Thread):
 
         # Else, proceed with the move
         return self.__tick(permutation, animation_tick, animation_wait_time)
+
+    def inject_grid(self):
+        """
+            Takes the newly generated grid and sends its content to the
+                pool manager for the ui to print it
+        """
+
+        event = Event(1, Event.TYPE_UI_REFRESH, {"grid": self.clone()})
+        self.event_pool.push(event)
