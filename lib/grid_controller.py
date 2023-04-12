@@ -353,9 +353,9 @@ class GridManager(Thread):
                         # On index i we move to the right, corresponding to the bottom
                         # when transposed
 
-                        an_id = 200
-                        an_id += default_val(line[i], default=0) * 10
-                        an_id += default_val(line[i-1], default=0) if i-1 >= 0 else 0
+                        an_id = 0x200
+                        an_id += default_val(line[i], default=0) * 16
+                        an_id += default_val(line[i-1], default=0) if i-1 >= 0 else 0xa
 
                         # Tick the animation
                         animation_tick({"coordinates": (i, col_id),
@@ -419,7 +419,7 @@ class GridManager(Thread):
                 for coords in to_delete: # For every deletion we have to operate
                     # Trigger an animation
                     animation_tick({"coordinates": (coords[0], coords[1]),
-                                    "animation_id": 100+self.grid[coords[1]][coords[0]]})
+                                    "animation_id": 0x100+self.grid[coords[1]][coords[0]]})
 
                     # Do the actual deletion
                     self.grid[coords[1]][coords[0]] = None
