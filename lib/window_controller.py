@@ -13,7 +13,8 @@ from random import randint
 from PIL import Image, ImageTk
 from threading import Thread
 from os import listdir
-
+from time import sleep
+from lib.event_pool_controller import Event
 SPRITE = {}
 
 def load_sprites(sprite_home):
@@ -22,7 +23,6 @@ def load_sprites(sprite_home):
     """
 
     for i in os.listdir(sprite_home):
-        print(i)
         SPRITE[i]=(ImageTk.PhotoImage(Image.open(sprite_home+i).resize((48, 48), Image.NEAREST)))
 
 
@@ -46,12 +46,13 @@ class MenuPrincipal:
     # Because this class manages tkinter things
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, root, grille ,sprite_home="../sprite/"):
+    def __init__(self, root,grille,event_pool,sprite_home="../sprite/"):
         self.root = root
-        self.jeu=FenetreDeJeu(self.root, sprite_home)
+        self.jeu=FenetreDeJeu(self.root, sprite_home, grille, event_pool)
         root.columnconfigure(0,)
         root.rowconfigure(0, weight=1)
         root.rowconfigure(1, weight=1)
+        self.grille=grille
         # Logo
         self.original_logo = Image.open(sprite_home+'Logo.png').convert('RGB')
         self.image_logo = ImageTk.PhotoImage(self.original_logo.resize((400, 300), Image.NEAREST))
@@ -111,7 +112,7 @@ class FenetreDeJeu():
     Decris la fenêtre de jeu
     """
 
-    def __init__(self, root, sprite_home):
+    def __init__(self, root, sprite_home, grille, event_pool):
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=0)
         root.rowconfigure(1, weight=0)
@@ -120,7 +121,7 @@ class FenetreDeJeu():
         self.root = root
         self.grille_element = []
         self.focus = (None, None)
-        self.grille_de_base = genere_alea(3)
+        self.grille_de_base = grille
         load_sprites(sprite_home)
 
 
@@ -185,12 +186,13 @@ class FenetreDeJeu():
             Cette fonction va être suprimé, source: TKT
         """
 
-        if not(j in (0, 14) or i in (0, 14)):
+        try:
             self.grille_element[i-1][j].config(bg="#FFFFFF")
             self.grille_element[i+1][j].config(bg="#FFFFFF")
             self.grille_element[i][j+1].config(bg="#FFFFFF")
             self.grille_element[i][j-1].config(bg="#FFFFFF")
-
+        except:
+            pass
     def off_focus(self):
         """
             Cette fonction va être suprimé, source: TKT
@@ -198,12 +200,13 @@ class FenetreDeJeu():
 
         i = self.focus[0]
         j = self.focus[1]
-        if not(j in (0, 14) or i in (0, 14)):
+        try:
             self.grille_element[int(i-1)][int(j)].config(bg="#73c2fa")
             self.grille_element[int(i+1)][int(j)].config(bg="#73c2fa")
             self.grille_element[int(i)][int(j+1)].config(bg="#73c2fa")
             self.grille_element[int(i)][int(j-1)].config(bg="#73c2fa")
-
+        except:
+            pass
     def regenere(self, liste_pos):
         """
             Liste de coordonné à actualiser ((1,2)(3,4))...
@@ -229,11 +232,12 @@ def genere_alea(nb_max):
     Fonction temporaire
     """
     return [[randint(1, nb_max+1) for i in range(15)] for j in range(15)]
-def main_loop(event_pool,sprite_home,grille):
+def main_loop(event_pool,sprite_home,grid_manager):
     window = Tk()
     configure_window(window)
-    menu = MenuPrincipal(window, grille, sprite_home=sprite_home)
+    event_pool.push(Event(0,"GEN_TRIGGER",(15,15)))
+    sleep(0.5)
+    tab=grid_manager.grid
+    print(tab)
+    menu = MenuPrincipal(window, tab , event_pool, sprite_home=sprite_home)
     menu.root.mainloop()
-
-if __name__ == "__main__":
-    main_loop("e","../sprite/",genere_alea(4))
