@@ -123,20 +123,19 @@ class FenetreDeJeu():
         self.focus = (None, None)
         self.grille_de_base = grille
         load_sprites(sprite_home)
-
-
+        self.event_pool=event_pool
     def lancer_jeu(self):
         """
         Initialise le jeu
 
         """
+        t1=Thread(target=self.event_clock)
+        t1.start()
         self.score = StringVar()
         text_score = Label(textvariable=self.score, bg="#73c2fa", font=("TkTooltipFont",25),
                            fg='#45283c')
         self.score.set("Score : 0")
         text_score.grid(row=1, column=0)
-
-        self.root.bind("<Button-3>", lambda x: self.backgroundclick())
         for (i, _element) in enumerate(self.grille_de_base):
             ligne_element = []
             for j in range(len(self.grille_de_base[0])):
@@ -148,6 +147,11 @@ class FenetreDeJeu():
                          self.gemeclique(_i, _j, self.grille_de_base[_i][_j]))
                 ligne_element.append(tmp)
             self.grille_element.append(ligne_element)
+    def event_clock(self):
+        while True:
+            e= self.event_pool.next_and_delete(1)
+            if e!=None:
+                print(e.msg_type)
 
     def backgroundclick(self):
         """
@@ -174,9 +178,7 @@ class FenetreDeJeu():
             self.focus = (i, j)
             self.on_focus(i, j)
         else:
-            self.grille_de_base[i][j], self.grille_de_base[self.focus[0]][self.focus[1]] = \
-                    self.grille_de_base[self.focus[0]][self.focus[1]], self.grille_de_base[i][j]
-            self.regenere([[i, j], [self.focus[0], self.focus[1]]])
+            self.event_pool.push(Event(0,Event.TYPE_GRID_PERMUTATION,{"permutation":((i,j),(self.focus[0],self.focus[1]))}))
             self.off_focus()
             self.focus = (None, None)
 
@@ -218,13 +220,7 @@ class FenetreDeJeu():
             self.grille_element[i][j].create_image(0, 0, image=SPRITE["00"+str(self.grille_de_base[i][j])+".png"],
                                                    anchor="nw", tag="nw")
 
-    def destroy(self, i, j):
-        """
-            Permet de detruire une case aux coordonnées i,j
-        """
 
-        self.grille_de_base[i][j] = 4
-        self.regenere([(i, j)])
 
 
 def genere_alea(nb_max):
@@ -237,7 +233,6 @@ def main_loop(event_pool,sprite_home,grid_manager):
     configure_window(window)
     event_pool.push(Event(0,Event.TYPE_GEN_TRIGGER,{"grid_size":(15,15)}))
     sleep(0.5)
-    tab = event_pool.next(1).payload["grid"]
-    print(tab)
+    tab = event_pool.next_and_delete(1).payload["grid"]
     menu = MenuPrincipal(window, tab, event_pool, sprite_home=sprite_home)
     menu.root.mainloop()

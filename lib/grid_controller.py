@@ -130,7 +130,7 @@ class GridManager(Thread):
             if event is not None:
                 # If is a permutation
                 if event.msg_type == Event.TYPE_GRID_PERMUTATION:
-                    permutation = event.payload["permuation"]
+                    permutation = event.payload["permutation"]
 
                     # If the payload is not well built, send an Error event
                     if len(permutation) != 2 or isinstance(permutation, tuple):
