@@ -12,7 +12,6 @@ from threading import Thread
 from time import sleep
 
 from tkinter import Canvas, StringVar, Label, Tk
-from random import randint
 from PIL import Image, ImageTk
 from lib.event_pool_controller import Event
 
