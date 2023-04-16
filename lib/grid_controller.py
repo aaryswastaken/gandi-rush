@@ -64,7 +64,7 @@ class GridManager(Thread):
         This class manages the grid and its physics
     """
 
-    def __init__(self, event_pool, generator, candy_count=4, animation_wait_time=0):
+    def __init__(self, event_pool, generator, candy_count=5, animation_wait_time=0):
         # Initialise stuff, we don't care
         super().__init__()
         self.grid = []

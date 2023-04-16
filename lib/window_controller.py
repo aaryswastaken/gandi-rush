@@ -143,7 +143,7 @@ class FenetreDeJeu():
             ligne_element = []
             for j in range(len(self.grille_de_base[0])):
                 tmp = Canvas(height=50, width=50, bd=0, highlightthickness=0, bg="#73c2fa")
-                tmp.create_image(0, 0, image=SPRITE["00"+str(self.grille_de_base[i][j])+".png"],
+                tmp.create_image(0, 0, image=SPRITE["30"+str(self.grille_de_base[i][j])+".png"],
                                  anchor="nw", tag="nw")
                 tmp.grid(row=i+1, column=j+1, padx=1, pady=1)
                 tmp.bind("<Button-1>", lambda _x, _i=i, _j=j:
@@ -159,7 +159,15 @@ class FenetreDeJeu():
         while True:
             event = self.event_pool.next_and_delete(1)
             if event is not None:
-                print(event.msg_type)
+                if event.msg_type==1:
+                    print("REFRESH")
+                if event.msg_type==2:
+                    print("UPDATE",hex(event.payload['new_gem']))
+                    self.grille_element[event.payload['coordinates'][1]][event.payload['coordinates'][0]].delete("nw")
+                    self.grille_element[event.payload['coordinates'][1]][event.payload['coordinates'][0]].create_image(0, 0, image=SPRITE[hex(event.payload['new_gem'])[2::]+".png"],
+                                 anchor="nw", tag="nw")
+                if event.msg_type==4:
+                    print("SCORE")
 
     def backgroundclick(self):
         """
