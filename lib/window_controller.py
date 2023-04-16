@@ -137,10 +137,9 @@ class FenetreDeJeu():
         self.score = StringVar()
         text_score = Label(textvariable=self.score, bg="#73c2fa", font=("TkTooltipFont",25),
                            fg='#45283c')
-        self.score.set("Score : 0")
+        self.score.set("Score: 000")
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         text_score.grid(row=1, column=0)
-        #where the lag is
         for (i, _element) in enumerate(self.grille_de_base):
             ligne_element = []
             for j in range(len(self.grille_de_base[0])):
@@ -187,7 +186,7 @@ class FenetreDeJeu():
                                       anchor="nw", tag="nw")
                 if event.msg_type==4:
                     payload_score = event.payload["score"]
-                    self.score.set(f"Score: {payload_score}")
+                    self.score.set(f"Score: {'{0:03}'.format(payload_score)}")
 
     def backgroundclick(self):
         """
@@ -220,7 +219,7 @@ class FenetreDeJeu():
 
     def on_focus(self, i, j):
         """
-            Cette fonction va être suprimé, source: TKT
+            Mets les cases en surbrillance autour de la case selectionnée
         """
 
         try:
@@ -233,7 +232,7 @@ class FenetreDeJeu():
 
     def off_focus(self):
         """
-            Cette fonction va être suprimé, source: TKT
+            Enlève les cases en surbrillance
         """
 
         i = self.focus[0]
@@ -247,12 +246,7 @@ class FenetreDeJeu():
             pass
 
 
-def genere_alea(nb_max):
-    """
-        Fonction temporaire
-    """
 
-    return [[randint(1, nb_max+1) for i in range(15)] for j in range(15)]
 
 def main_loop(event_pool, sprite_home, _grid_manager):
     """
