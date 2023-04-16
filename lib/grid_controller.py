@@ -358,6 +358,8 @@ class GridManager(Thread):
                 None
         """
 
+        # pylint: disable=too-many-branches
+
         # We take the grid's transposition
         self.__sanitise_grid()
         transposed = self.transpose()
