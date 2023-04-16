@@ -371,6 +371,7 @@ class GridManager(Thread):
 
                 # We start to fetch where the first None is
                 while i >= 0 and not stop:
+                    i -= 1
                     if line[i] is None:
                         stop = True
 
@@ -407,9 +408,9 @@ class GridManager(Thread):
 
                 # Fill the actual line with every cell above the updated with inverted values
                 # so that they arent taken into account when testing if the bottom cell can react
-                new_line = [1000-new_gem,
-                            *[1000-e_ if e_ is not None else None for e_ in line[0:i-1]],
-                            line[i],
+                new_line = [-1000+new_gem,
+                            *[-1000+e_ if e_ is not None else None for e_ in line[0:i-1]],
+                            line[i-1],
                             *line[(i+1):]]
 
                 mutated_transposed.append(new_line)
@@ -420,7 +421,9 @@ class GridManager(Thread):
                 mutated_transposed.append(line)
 
         if len(updated_line) > 0:
+            print("Waiting...")
             sleep(animation_wait_time / 1000) # TODO : /2 ??
+            print("waited :)")
 
             for (col_id, i) in zip(updated_line, updated_from):
                 # We update the screen so that it's visible
@@ -428,11 +431,16 @@ class GridManager(Thread):
                 j = i-1
 
                 animation_tick({"coordinates": (col_id, i),
-                                "animaion_id": 0x300 + mutated_transposed[col_id][i]})
+                                "animation_id": 0x300 + default_val(mutated_transposed[col_id][i],
+                                                                    default=0xa)
+                                })
 
                 while j >= 0:
+                    temp = mutated_transposed[col_id][j]
                     animation_tick({"coordinates": (col_id, j),
-                                    "animation_id": 0x300 + 1000 + mutated_transposed[col_id][j]})
+                                    "animation_id": 0x300 +
+                                        (1000 + temp if temp is not None else 0xa)
+                                    })
 
                     j -= 1
 
@@ -570,7 +578,7 @@ class GridManager(Thread):
         # Do a lil animation shit
         sleep(animation_wait_time / 1000)
         print("Gravity tick")
-        update_payload = self.gravity_tick(animation_tick=animation_tick)
+        update_payload = self.gravity_tick(animation_tick, animation_wait_time)
         print("Gravity ticked")
         sleep(animation_wait_time / 1000)
 
@@ -589,6 +597,8 @@ class GridManager(Thread):
         # print("Going for the final gem update")
         # self.__push_final_gems(animation_tick)
         # --------
+
+        print("FINISHED :))))")
 
         return 0
 
