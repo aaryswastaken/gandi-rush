@@ -112,6 +112,7 @@ class GridManager(Thread):
         """
 
         # This build an event towards the UI calling an update with the provided payload
+        print(f"New update: {payload}")
         event = Event(1, Event.TYPE_UI_UPDATE,
                       {"update_type": 1, "coordinates": payload["coordinates"],
                        "new_gem": payload["animation_id"]})
@@ -313,6 +314,10 @@ class GridManager(Thread):
         actual_type = self.grid[j][i]
 
 
+        # To avoid None detection
+        if actual_type is None:
+            return False
+
         # Testing for horizontal matches
         if explore_adj(self.grid, i-1, j, actual_type) and \
                 explore_adj(self.grid, i+1, j, actual_type):
@@ -463,6 +468,17 @@ class GridManager(Thread):
         return 0 # If everything is fine, return 0
 
 
+    def __push_final_gems(self, animation_tick):
+        """
+            __push_final_gems: Push when finished
+        """
+
+        for (y_pos, g_slice) in enumerate(self.grid):
+            for (x_pos, element) in enumerate(g_slice):
+                animation_tick({"coordinates": (x_pos, y_pos),
+                                "animation_id": 0x300 + element})
+
+
     def __tick(self, permutation, animation_tick=lambda payload: None, animation_wait_time=0):
         """
             __tick (private): Wrapper for first tick + gravity then the refresh
@@ -481,7 +497,14 @@ class GridManager(Thread):
         # Call for the refresh
         res = self.__refresh(animation_tick, animation_wait_time)
 
-        return res # If there is any error, returns it
+        if res != 0:
+            return res # If there is any error, returns it
+
+        # Else, push new gems to grid then reurn 0
+        sleep(animation_wait_time / 1000)
+        self.__push_final_gems(animation_tick)
+
+        return 0
 
 
     def is_legal_permutation(self, permutation):
