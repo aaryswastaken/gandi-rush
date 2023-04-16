@@ -492,11 +492,11 @@ class GridManager(Thread):
         # Trigger the print of the permutation
         if not solo:
             animation_tick({"coordinates": (permutation[0][0], permutation[0][1]),
-                            "animation_id": 0x100 +
+                            "animation_id": 0x300 +
                                 self.grid[permutation[0][1]][permutation[0][0]]})
 
             animation_tick({"coordinates": (permutation[1][0], permutation[1][1]),
-                            "animation_id": 0x100 +
+                            "animation_id": 0x300 +
                                 self.grid[permutation[1][1]][permutation[1][0]]})
 
 
