@@ -168,6 +168,8 @@ class FenetreDeJeu():
                                  anchor="nw", tag="nw")
                 if event.msg_type==4:
                     print("SCORE")
+                    sc = event.payload["score"]
+                    self.score.set(f"Score: {sc}")
 
     def backgroundclick(self):
         """

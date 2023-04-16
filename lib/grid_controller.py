@@ -69,6 +69,7 @@ class GridManager(Thread):
         super().__init__()
         self.grid = []
         self.grid_size = ()
+        self.score = 0
 
         self.event_pool = event_pool
         self.generator = generator
@@ -501,8 +502,12 @@ class GridManager(Thread):
 
 
         # For every cell group we have to delete
+        total = 0 # points
+
         for to_delete in to_delete_array:
             if len(to_delete) >= 3: # Little sanity check
+                total += len(to_delete)
+
                 for coords in to_delete: # For every deletion we have to operate
                     # Trigger an animation
                     print(self.grid[coords[1]][coords[0]])
@@ -511,6 +516,13 @@ class GridManager(Thread):
 
                     # Do the actual deletion
                     self.grid[coords[1]][coords[0]] = None
+
+        print(f"total: {total}")
+
+        self.score += total
+
+        event = Event(1, Event.TYPE_SCORE_UPDATE, {"score": self.score})
+        self.event_pool.push(event)
 
         return 0 # If everything went fine, return 0
 
