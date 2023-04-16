@@ -223,13 +223,12 @@ class FenetreDeJeu():
             Cette fonction va être suprimé, source: TKT
         """
 
-        try:
-            self.grille_element[i-1][j].config(bg="#FFFFFF")
-            self.grille_element[i+1][j].config(bg="#FFFFFF")
-            self.grille_element[i][j+1].config(bg="#FFFFFF")
-            self.grille_element[i][j-1].config(bg="#FFFFFF")
-        except IndexError:
-            pass
+        size_x = len(self.grille_element[0])
+        size_y = len(self.grille_element)
+
+        for (off_x, off_y) in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            if 0 <= j + off_x < size_x and 0 <= i + off_y < size_y:
+                self.grille_element[i + off_y][j + off_x].config(bg="#FFFFFF")
 
     def off_focus(self):
         """
@@ -238,14 +237,13 @@ class FenetreDeJeu():
 
         i = self.focus[0]
         j = self.focus[1]
-        try:
-            self.grille_element[int(i-1)][int(j)].config(bg="#73c2fa")
-            self.grille_element[int(i+1)][int(j)].config(bg="#73c2fa")
-            self.grille_element[int(i)][int(j+1)].config(bg="#73c2fa")
-            self.grille_element[int(i)][int(j-1)].config(bg="#73c2fa")
-        except IndexError:
-            pass
 
+        size_x = len(self.grille_element[0])
+        size_y = len(self.grille_element)
+
+        for (off_x, off_y) in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            if 0 <= j + off_x < size_x and 0 <= i + off_y < size_y:
+                self.grille_element[i + off_y][j + off_x].config(bg="#73c2fa")
 
 def genere_alea(nb_max):
     """
