@@ -174,9 +174,8 @@ class FenetreDeJeu():
             event = self.event_pool.next_and_delete(1)
             if event is not None:
                 if event.msg_type==1:
-                    print("REFRESH")
+                    pass # lol 2
                 if event.msg_type==2:
-                    print("UPDATE",hex(event.payload['new_gem']))
                     self.grille_element \
                         [event.payload['coordinates'][1]] \
                         [event.payload['coordinates'][0]] \
@@ -187,7 +186,6 @@ class FenetreDeJeu():
                         .create_image(0, 0, image=SPRITE[hex(event.payload['new_gem'])[2::]+".png"],
                                       anchor="nw", tag="nw")
                 if event.msg_type==4:
-                    print("SCORE")
                     payload_score = event.payload["score"]
                     self.score.set(f"Score: {payload_score}")
 

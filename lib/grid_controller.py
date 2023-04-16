@@ -112,7 +112,6 @@ class GridManager(Thread):
         """
 
         # This build an event towards the UI calling an update with the provided payload
-        print(f"New update: {payload}")
         event = Event(1, Event.TYPE_UI_UPDATE,
                       {"update_type": 1, "coordinates": payload["coordinates"],
                        "new_gem": payload["animation_id"]})
@@ -132,8 +131,6 @@ class GridManager(Thread):
                 # If is a permutation
                 if event.msg_type == Event.TYPE_GRID_PERMUTATION:
                     permutation = event.payload["permutation"]
-
-                    print(f"Permutation: {permutation}")
 
                     # If the payload is not well built, send an Error event
                     if len(permutation) != 2 or (not isinstance(permutation, tuple)):
@@ -364,7 +361,6 @@ class GridManager(Thread):
         # We take the grid's transposition
         self.__sanitise_grid()
         transposed = self.transpose()
-        print(f"Gravity's transposed: {transposed}")
 
         # We initialise new grid in the transposed form
         mutated_transposed = []
@@ -433,9 +429,7 @@ class GridManager(Thread):
                 mutated_transposed.append(line)
 
         if len(updated_temp) > 0:
-            print("Waiting...")
             sleep(animation_wait_time / 1000) # TODO : /2 ??
-            print("waited :)")
 
             for (col_id, i) in updated_temp:
                 # We update the screen so that it's visible
@@ -455,8 +449,6 @@ class GridManager(Thread):
                                     })
 
                     j -= 1
-
-        print(f"After gravity transposed: {mutated_transposed}")
 
         # De-transpose
         self.from_transposed(mutated_transposed)
@@ -521,14 +513,11 @@ class GridManager(Thread):
 
                 for coords in to_delete: # For every deletion we have to operate
                     # Trigger an animation
-                    print(self.grid[coords[1]][coords[0]])
                     animation_tick({"coordinates": (coords[0], coords[1]),
                                     "animation_id": 0x100+self.grid[coords[1]][coords[0]]})
 
                     # Do the actual deletion
                     self.grid[coords[1]][coords[0]] = None
-
-        print(f"total: {total}")
 
         self.score += total
 
@@ -598,13 +587,10 @@ class GridManager(Thread):
 
         # Do a lil animation shit
         sleep(animation_wait_time / 1000)
-        print("Gravity tick")
         update_payload = self.gravity_tick(animation_tick, animation_wait_time)
-        print("Gravity ticked")
         sleep(animation_wait_time / 1000)
 
         # Call for the refresh
-        print("Going for the refresh")
         res = self.__refresh(update_payload, animation_tick, animation_wait_time)
 
         if res != 0:
@@ -618,8 +604,6 @@ class GridManager(Thread):
         # print("Going for the final gem update")
         # self.__push_final_gems(animation_tick)
         # --------
-
-        print("FINISHED :))))")
 
         return 0
 
