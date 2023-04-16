@@ -437,8 +437,6 @@ class GridManager(Thread):
             else:
                 mutated_transposed.append(line)
 
-        print(mutated_transposed)
-
         if len(updated_temp) > 0:
             sleep(animation_wait_time / 1000) # TODO : /2 ??
 
@@ -454,7 +452,7 @@ class GridManager(Thread):
                                     })
                 else:
                     temp = mutated_transposed[col_id][0] # Shouldn't be necessary
-                    print(temp)
+
                     animation_tick({"coordinates": (col_id, 0),
                                     "animation_id": 0x300 +
                                         (1000 + temp if temp is not None else 0xa)
