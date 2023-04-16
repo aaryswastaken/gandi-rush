@@ -347,14 +347,18 @@ class GridManager(Thread):
         # We take the grid's transposition
         transposed = self.transpose()
 
+        print(f"Gravity's transposed: {transposed}")
+
         # We initialise new grid in the transposed form
         mutated_transposed = []
 
         # For every line of the transposed aka every column
         for (col_id, line) in enumerate(transposed):
-            if -1 in line: # If not, skip
+            if None in line: # If not, skip
                 i = len(line) - 1
                 n_occurences = sum(int(e is None) for e in line)
+
+                print(f"Occurences: {n_occurences}")
 
                 # Migrates values:
                 # [2, -1, 4, 5, -1, 6] -> [-1, -1, 2, 4, 5, 6]
@@ -363,27 +367,65 @@ class GridManager(Thread):
                         # On index i we move to the right, corresponding to the bottom
                         # when transposed
 
-                        an_id = 0x200
-                        an_id += default_val(line[i], default=0) * 16
-                        an_id += default_val(line[i-1], default=0) if i-1 >= 0 else 0xa
 
+                        # This code loses steps:
+                        # -------
+                        # an_id = 0x200
+                        # an_id += default_val(line[i], default=0) * 16
+                        # an_id += default_val(line[i-1], default=0) if i-1 >= 0 else 0xa
+                        #
                         # Tick the animation
+                        # print("Gravity animation :)")
+                        # animation_tick({"coordinates": (i, col_id),
+                        #                 "animation_id": an_id})
+                        # -------
+
+                        new_gem = self.generator.generate_cell()
+
+                        j = i-1
+
+                        # For when i == j
+                        an_id = 0x200
+                        an_id += default_val(line[i-1], default=0xa) * 16
+                        an_id += 0xa
                         animation_tick({"coordinates": (i, col_id),
                                         "animation_id": an_id})
 
-                        # Fill with None
-                        new_line = [None, *line[0:i], *line[(i+1):]]
+                        while j >= 1:
+                            an_id = 0x200
+                            an_id += default_val(line[j-1], default=0xa) * 16
+                            an_id += default_val(line[j], default=0xa)
+
+                            animation_tick({"coordinates": (j, col_id),
+                                            "animation_id": an_id})
+
+                            j -= 1
+
+                        # For when j == 0
+                        an_id = 0x200
+                        an_id += new_gem * 16
+                        an_id += default_val(line[j], default=0xa) # Should never default
+                        animation_tick({"coordinates": (0, col_id),
+                                        "animation_id": an_id})
+
+
+                        # Fill with the new one
+                        new_line = [new_gem, *line[0:i], *line[(i+1):]]
                         line = new_line
+
+                        print(line)
                     i -= 1
 
             # Append the new line
             mutated_transposed.append(line)
 
+        print(f"After gravity transposed: {mutated_transposed}")
+
         # De-transpose
         self.from_transposed(mutated_transposed)
 
         # Repopulate
-        self.generator.fill_grid_manager_nones(self)
+        # self.generator.fill_grid_manager_nones(self)
 
         return 0
 
@@ -477,7 +519,6 @@ class GridManager(Thread):
 
         for (y_pos, g_slice) in enumerate(self.grid):
             for (x_pos, element) in enumerate(g_slice):
-                print(element)
                 animation_tick({"coordinates": (x_pos, y_pos),
                                 "animation_id": 0x300 + element})
 
@@ -490,21 +531,27 @@ class GridManager(Thread):
         # Do the actual move
         res = self.__routine(permutation, animation_tick=animation_tick)
         if res != 0:
+            print("Routine had an error")
             return res # If there is any error, returns it
 
         # Do a lil animation shit
         sleep(animation_wait_time / 1000)
+        print("Gravity tick")
         self.gravity_tick(animation_tick=animation_tick)
+        print("Gravity ticked")
         sleep(animation_wait_time / 1000)
 
         # Call for the refresh
+        print("Going for the refresh")
         res = self.__refresh(animation_tick, animation_wait_time)
 
         if res != 0:
+            print("Error when refreshed")
             return res # If there is any error, returns it
 
         # Else, push new gems to grid then reurn 0
         sleep(animation_wait_time / 1000)
+        print("Going for the final gem update")
         self.__push_final_gems(animation_tick)
 
         return 0
