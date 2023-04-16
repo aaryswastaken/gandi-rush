@@ -113,8 +113,8 @@ class GridManager(Thread):
 
         # This build an event towards the UI calling an update with the provided payload
         event = Event(1, Event.TYPE_UI_UPDATE,
-                      {"update_type": 1, "coordinates": payload.coordinates,
-                       "new_gem": payload.animation_id})
+                      {"update_type": 1, "coordinates": payload["coordinates"],
+                       "new_gem": payload["animation_id"]})
         self.event_pool.push(event)
 
     def run(self):
@@ -388,7 +388,7 @@ class GridManager(Thread):
 
         if not solo:
             # Permutations
-            self.grid.permute(permutation)
+            self.permute(permutation)
 
             to_delete0 = self.detecte_coordonnees_combinaison(permutation[0][0],
                                                               permutation[0][1])
@@ -402,7 +402,7 @@ class GridManager(Thread):
                                for coords in to_delete1)
 
             if not (is_detected0 or is_detected1):  # If there is no alignement on both permuted
-                self.grid.permute(permutation)  # Reset move
+                self.permute(permutation)  # Reset move
                 return 2  # Useless move
 
             if is_detected0: # If there is an alignement on group zero, delete everything

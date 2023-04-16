@@ -57,6 +57,7 @@ class EventPool():
         out = None
 
         while i < len(self.stack) and out is None:
+            print(i,self.stack,i < len(self.stack))
             if self.stack[i].dest == dest:
                 out = self.stack.pop(i)
             i += 1
