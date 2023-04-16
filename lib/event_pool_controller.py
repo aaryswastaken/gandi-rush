@@ -56,8 +56,10 @@ class EventPool():
         i = 0
         out = None
 
+        print(f"When called, len= {len(self.stack)}")
+
         while i < len(self.stack) and out is None:
-            print(i,self.stack,i < len(self.stack))
+            # print(i,len(self.stack))
             if self.stack[i].dest == dest:
                 out = self.stack.pop(i)
             i += 1
