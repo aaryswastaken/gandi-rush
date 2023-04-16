@@ -152,13 +152,19 @@ class FenetreDeJeu():
                          self.gemeclique(_i, _j))
                 ligne_element.append(tmp)
             self.grille_element.append(ligne_element)
+
     def on_closing(self):
+        """
+            When the window closes
+        """
+
         try:
             self.running=False
             self.event_pool.push(Event(0,Event.TYPE_EXIT_ALL,{}))
             self.root.destroy()
-        except:
+        except RuntimeError: # lol
             pass
+
     def event_clock(self):
         """
             Function triggered to see events
