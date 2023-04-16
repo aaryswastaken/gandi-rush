@@ -386,9 +386,9 @@ class GridManager(Thread):
 
                         # For when i == j
                         an_id = 0x200
-                        an_id += default_val(line[i-1], default=0xa) * 16
                         an_id += 0xa
-                        animation_tick({"coordinates": (i, col_id),
+                        an_id += default_val(line[i-1], default=0xa) * 16
+                        animation_tick({"coordinates": (col_id, i),
                                         "animation_id": an_id})
 
                         while j >= 1:
@@ -396,7 +396,7 @@ class GridManager(Thread):
                             an_id += default_val(line[j-1], default=0xa) * 16
                             an_id += default_val(line[j], default=0xa)
 
-                            animation_tick({"coordinates": (j, col_id),
+                            animation_tick({"coordinates": (col_id, j),
                                             "animation_id": an_id})
 
                             j -= 1
@@ -405,7 +405,7 @@ class GridManager(Thread):
                         an_id = 0x200
                         an_id += new_gem * 16
                         an_id += default_val(line[j], default=0xa) # Should never default
-                        animation_tick({"coordinates": (0, col_id),
+                        animation_tick({"coordinates": (col_id, 0),
                                         "animation_id": an_id})
 
 
