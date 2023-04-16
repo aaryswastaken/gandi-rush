@@ -5,12 +5,14 @@
     Creation Date: 04/04/2023
 """
 
-from tkinter import Tk
+# Otherwise there is a conflict with Final newline missing
+# pylint: disable=trailing-newlines
 
 from lib.event_pool_controller import EventPool
 from lib.grid_controller import GridManager
 import lib.window_controller
 from lib.generator import GridGenerator
+
 
 if __name__ == "__main__":
     event_pool = EventPool()
@@ -19,3 +21,4 @@ if __name__ == "__main__":
     grid_controller.start()
 
     lib.window_controller.main_loop(event_pool,"./sprite/",grid_controller)
+

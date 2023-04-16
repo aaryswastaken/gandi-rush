@@ -161,18 +161,22 @@ class GridGenerator():
         grid_manager.grid = self.grid
         grid_manager.grid_size = self.grid_size
 
-#     def fill_grid_manager_nones(self, grid_manager):
-#         """
-#             After grid_manager's gravity tick we need to regenerate new cells
-#
-#             Parameters:
-#                 grid_manager (GridManager)
-#
-#             Returns:
-#                 None
-#         """
-#
-#         # TODO
+    def fill_grid_manager_nones(self, grid_manager):
+        """
+            After grid_manager's gravity tick we need to regenerate new cells
+
+            Parameters:
+                grid_manager (GridManager)
+
+            Returns:
+                None
+        """
+
+        for (y_pos, g_slice) in enumerate(grid_manager.grid):
+            for (x_pos, elem) in enumerate(g_slice):
+                if elem is None:
+                    grid_manager.grid[y_pos][x_pos] = self.__generate_random()
+
 
     def generate_cell(self):
         """

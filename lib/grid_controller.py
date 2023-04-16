@@ -5,7 +5,7 @@
         is a bit trash, we should create a grid class that is shared
         between both classes.
 
-    Author: @aaryswastaken
+    Author: @aaryswastaken, @Byllie
     Created Date: 03/13/2023
 """
 
@@ -136,18 +136,20 @@ class GridManager(Thread):
                     if len(permutation) != 2 or isinstance(permutation, tuple):
                         error_event = Event(1, Event.TYPE_GRID_PERMUTATION_ERROR,
                                             {"permutation": permutation})
+                        print("Permutation error (bad payload)")
                         self.event_pool.push(error_event)
 
-                    # Do the actual permutation
-                    res = self.tick(permutation, animation_tick=self.__event_tick,
-                                    animation_wait_time=self.animation_wait_time)
+                    else:
+                        # Do the actual permutation
+                        res = self.tick(permutation, animation_tick=self.__event_tick,
+                                        animation_wait_time=self.animation_wait_time)
 
-                    # If an error has been encountered, send an Error event
-                    if res != 1:
-                        error_event = Event(1, Event.TYPE_GRID_TICK_ERROR,
-                                            {"permutation": permutation, "res": res})
-
-                        self.event_pool.push(error_event)
+                        # If an error has been encountered, send an Error event
+                        if res != 1:
+                            error_event = Event(1, Event.TYPE_GRID_TICK_ERROR,
+                                                {"permutation": permutation, "res": res})
+                            print(f"Error when ticking: {res}")
+                            self.event_pool.push(error_event)
                 elif event.msg_type == Event.TYPE_GEN_TRIGGER:
                     dimensions = event.payload["grid_size"]
 
@@ -337,7 +339,7 @@ class GridManager(Thread):
         """
 
         # We take the grid's transposition
-        transposed = self.grid.transpose()
+        transposed = self.transpose()
 
         # We initialise new grid in the transposed form
         mutated_transposed = []
@@ -372,7 +374,7 @@ class GridManager(Thread):
             mutated_transposed.append(line)
 
         # De-transpose
-        self.grid.from_transposed(mutated_transposed)
+        self.from_transposed(mutated_transposed)
 
         # Repopulate
         self.generator.fill_grid_manager_nones(self)

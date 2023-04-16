@@ -68,6 +68,9 @@ class EventPool():
                 out = self.stack.pop(i)
             i += 1
 
+        if out is not None:
+            print("Returning one event")
+
         return out
 
     def next_priority(self, dest):

@@ -8,13 +8,15 @@
 from __future__ import absolute_import
 
 import os
+from threading import Thread
+from time import sleep
+
 from tkinter import Canvas, StringVar, Label, Tk
 from random import randint
 from PIL import Image, ImageTk
-from threading import Thread
-from os import listdir
-from time import sleep , time
 from lib.event_pool_controller import Event
+
+
 SPRITE = {}
 
 def load_sprites(sprite_home):
@@ -24,7 +26,6 @@ def load_sprites(sprite_home):
 
     for i in os.listdir(sprite_home):
         SPRITE[i]=(ImageTk.PhotoImage(Image.open(sprite_home+i).resize((48, 48), Image.NEAREST)))
-
 
 def configure_window(root):
     """
@@ -92,7 +93,7 @@ class MenuPrincipal:
 
     def leave_menu(self, _):
         """
-        Fonction lancé pour détruire les éléments du menu
+            Fonction lancé pour détruire les éléments du menu
         """
 
         self.bouton.destroy()
@@ -100,7 +101,7 @@ class MenuPrincipal:
 
     def bouton_jouer_click(self, _):
         """
-        Lancement du jeu, fermeture du menu
+            Lancement du jeu, fermeture du menu
         """
 
         self.leave_menu(None)
@@ -124,13 +125,14 @@ class FenetreDeJeu():
         self.grille_de_base = grille
         load_sprites(sprite_home)
         self.event_pool=event_pool
+
     def lancer_jeu(self):
         """
-        Initialise le jeu
-
+            Initialise le jeu
         """
-        t1=Thread(target=self.event_clock)
-        t1.start()
+
+        thread_one=Thread(target=self.event_clock)
+        thread_one.start()
         self.score = StringVar()
         text_score = Label(textvariable=self.score, bg="#73c2fa", font=("TkTooltipFont",25),
                            fg='#45283c')
@@ -150,25 +152,28 @@ class FenetreDeJeu():
             self.grille_element.append(ligne_element)
 
     def event_clock(self):
+        """
+            Function triggered to see events
+        """
+
         while True:
-            e= self.event_pool.next_and_delete(1)
-            if e!=None:
-                print(e.msg_type)
+            event = self.event_pool.next_and_delete(1)
+            if event is not None:
+                print(event.msg_type)
 
     def backgroundclick(self):
         """
-        Evenement si un clique hors grille est réalisé
+            Evenement si un clique hors grille est réalisé
         """
+
         if self.focus != (None, None):
             self.off_focus()
             self.focus = (None, None)
 
     def gemeclique(self, i, j):
         """
-        Evenement si une gemme est cliqué
+            Evenement si une gemme est cliqué
         """
-
-
 
         if self.focus == (None, None):
             self.focus = (i, j)
@@ -178,7 +183,9 @@ class FenetreDeJeu():
             self.focus = (i, j)
             self.on_focus(i, j)
         else:
-            self.event_pool.push(Event(0,Event.TYPE_GRID_PERMUTATION,{"permutation":((i,j),(self.focus[0],self.focus[1]))}))
+            self.event_pool.push(Event(0,Event.TYPE_GRID_PERMUTATION,
+                                       {"permutation":((i,j),(self.focus[0],self.focus[1]))}))
+
             self.off_focus()
             self.focus = (None, None)
 
@@ -193,8 +200,9 @@ class FenetreDeJeu():
             self.grille_element[i+1][j].config(bg="#FFFFFF")
             self.grille_element[i][j+1].config(bg="#FFFFFF")
             self.grille_element[i][j-1].config(bg="#FFFFFF")
-        except:
+        except IndexError:
             pass
+
     def off_focus(self):
         """
             Cette fonction va être suprimé, source: TKT
@@ -207,8 +215,9 @@ class FenetreDeJeu():
             self.grille_element[int(i+1)][int(j)].config(bg="#73c2fa")
             self.grille_element[int(i)][int(j+1)].config(bg="#73c2fa")
             self.grille_element[int(i)][int(j-1)].config(bg="#73c2fa")
-        except:
+        except IndexError:
             pass
+
     def regenere(self, liste_pos):
         """
             Liste de coordonné à actualiser ((1,2)(3,4))...
@@ -217,18 +226,25 @@ class FenetreDeJeu():
 
         for i, j in liste_pos:
             self.grille_element[i][j].delete("nw")
-            self.grille_element[i][j].create_image(0, 0, image=SPRITE["00"+str(self.grille_de_base[i][j])+".png"],
+            self.grille_element[i][j].create_image(0, 0,
+                                                   image=SPRITE["00"+
+                                                                str(self.grille_de_base[i][j])+
+                                                                ".png"],
                                                    anchor="nw", tag="nw")
-
-
 
 
 def genere_alea(nb_max):
     """
-    Fonction temporaire
+        Fonction temporaire
     """
+
     return [[randint(1, nb_max+1) for i in range(15)] for j in range(15)]
-def main_loop(event_pool,sprite_home,grid_manager):
+
+def main_loop(event_pool, sprite_home, _grid_manager):
+    """
+        Main loop of the file
+    """
+
     window = Tk()
     configure_window(window)
     event_pool.push(Event(0,Event.TYPE_GEN_TRIGGER,{"grid_size":(15,15)}))
