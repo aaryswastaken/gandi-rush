@@ -133,6 +133,8 @@ class GridManager(Thread):
                 if event.msg_type == Event.TYPE_GRID_PERMUTATION:
                     permutation = event.payload["permutation"]
 
+                    print(f"Permutation: {permutation}")
+
                     # If the payload is not well built, send an Error event
                     if len(permutation) != 2 or (not isinstance(permutation, tuple)):
                         error_event = Event(1, Event.TYPE_GRID_PERMUTATION_ERROR,
@@ -475,6 +477,7 @@ class GridManager(Thread):
 
         for (y_pos, g_slice) in enumerate(self.grid):
             for (x_pos, element) in enumerate(g_slice):
+                print(element)
                 animation_tick({"coordinates": (x_pos, y_pos),
                                 "animation_id": 0x300 + element})
 

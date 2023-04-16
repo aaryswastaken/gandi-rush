@@ -184,7 +184,7 @@ class FenetreDeJeu():
             self.on_focus(i, j)
         else:
             self.event_pool.push(Event(0,Event.TYPE_GRID_PERMUTATION,
-                                       {"permutation":((i,j),(self.focus[0],self.focus[1]))}))
+                                       {"permutation":((j,i),(self.focus[1],self.focus[0]))}))
 
             self.off_focus()
             self.focus = (None, None)
