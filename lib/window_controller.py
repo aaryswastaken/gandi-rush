@@ -163,13 +163,19 @@ class FenetreDeJeu():
                     print("REFRESH")
                 if event.msg_type==2:
                     print("UPDATE",hex(event.payload['new_gem']))
-                    self.grille_element[event.payload['coordinates'][1]][event.payload['coordinates'][0]].delete("nw")
-                    self.grille_element[event.payload['coordinates'][1]][event.payload['coordinates'][0]].create_image(0, 0, image=SPRITE[hex(event.payload['new_gem'])[2::]+".png"],
-                                 anchor="nw", tag="nw")
+                    self.grille_element \
+                        [event.payload['coordinates'][1]] \
+                        [event.payload['coordinates'][0]] \
+                        .delete("nw")
+                    self.grille_element \
+                        [event.payload['coordinates'][1]] \
+                        [event.payload['coordinates'][0]] \
+                        .create_image(0, 0, image=SPRITE[hex(event.payload['new_gem'])[2::]+".png"],
+                                      anchor="nw", tag="nw")
                 if event.msg_type==4:
                     print("SCORE")
-                    sc = event.payload["score"]
-                    self.score.set(f"Score: {sc}")
+                    payload_score = event.payload["score"]
+                    self.score.set(f"Score: {payload_score}")
 
     def backgroundclick(self):
         """
