@@ -133,10 +133,9 @@ class GridManager(Thread):
                     permutation = event.payload["permutation"]
 
                     # If the payload is not well built, send an Error event
-                    if len(permutation) != 2 or isinstance(permutation, tuple):
+                    if len(permutation) != 2 or (not isinstance(permutation, tuple)):
                         error_event = Event(1, Event.TYPE_GRID_PERMUTATION_ERROR,
                                             {"permutation": permutation})
-                        print("Permutation error (bad payload)")
                         self.event_pool.push(error_event)
 
                     else:
@@ -405,6 +404,8 @@ class GridManager(Thread):
 
             if not (is_detected0 or is_detected1):  # If there is no alignement on both permuted
                 self.permute(permutation)  # Reset move
+                print("Is useless move")
+                print(f"Grid: {self.grid}")
                 return 2  # Useless move
 
             if is_detected0: # If there is an alignement on group zero, delete everything
