@@ -389,44 +389,55 @@ class GridManager(Thread):
 
                 j = i-1
 
-                # For when i == j, animate that i-1 is replacing None
-                an_id = 0x200
-                an_id += 0xa
-                an_id += default_val(line[i-1], default=0xa) * 16
-                animation_tick({"coordinates": (col_id, i),
-                                "animation_id": an_id})
-
-                # For all 0 < j < i -> Animate that it's going down
-                while j >= 1:
+                if i > 0:
+                    # For when i == j, animate that i-1 is replacing None
                     an_id = 0x200
-                    an_id += default_val(line[j-1], default=0xa) * 16
-                    an_id += default_val(line[j], default=0xa)
-
-                    animation_tick({"coordinates": (col_id, j),
+                    an_id += 0xa
+                    an_id += default_val(line[i-1], default=0xa) * 16
+                    animation_tick({"coordinates": (col_id, i),
                                     "animation_id": an_id})
 
-                    j -= 1
+                    # For all 0 < j < i -> Animate that it's going down
+                    while j >= 1:
+                        an_id = 0x200
+                        an_id += default_val(line[j-1], default=0xa) * 16
+                        an_id += default_val(line[j], default=0xa)
 
-                # For when j == 0, animate last going down and new cell coming
-                an_id = 0x200
-                an_id += new_gem * 16
-                an_id += default_val(line[j], default=0xa) # Should never default
-                animation_tick({"coordinates": (col_id, 0),
-                                "animation_id": an_id})
+                        animation_tick({"coordinates": (col_id, j),
+                                        "animation_id": an_id})
+
+                        j -= 1
+
+                    # For when j == 0, animate last going down and new cell coming
+                    an_id = 0x200
+                    an_id += new_gem * 16
+                    an_id += default_val(line[j], default=0xa) # Should never default
+                    animation_tick({"coordinates": (col_id, 0),
+                                    "animation_id": an_id})
 
 
-                # Fill the actual line with every cell above the updated with inverted values
-                # so that they arent taken into account when testing if the bottom cell can react
-                new_line = [-1000+new_gem,
-                            *[-1000+e_ if e_ is not None else None for e_ in line[0:i-1]],
-                            line[i-1],
-                            *line[(i+1):]]
+                    # Fill the actual line with every cell above the updated with inverted values
+                    # so that they arent taken into account when testing if the bottom
+                    # cell can react
+                    new_line = [-1000+new_gem,
+                                *[-1000+e_ if e_ is not None else None for e_ in line[0:i-1]],
+                                line[i-1],
+                                *line[(i+1):]]
+                else:
+                    an_id = 0x200
+                    an_id += 0xa
+                    an_id += new_gem * 16
+                    animation_tick({"coordinates": (col_id, 0),
+                                    "animation_id": an_id})
+
+                    new_line = [-1000 + new_gem, *line[1:]]
 
                 mutated_transposed.append(new_line)
-
                 updated_temp.append((col_id, i))
             else:
                 mutated_transposed.append(line)
+
+        print(mutated_transposed)
 
         if len(updated_temp) > 0:
             sleep(animation_wait_time / 1000) # TODO : /2 ??
@@ -436,10 +447,18 @@ class GridManager(Thread):
 
                 j = i-1
 
-                animation_tick({"coordinates": (col_id, i),
-                                "animation_id": 0x300 + default_val(mutated_transposed[col_id][i],
-                                                                    default=0xa)
-                                })
+                if i > 0:
+                    animation_tick({"coordinates": (col_id, i),
+                                    "animation_id": 0x300 +
+                                        default_val(mutated_transposed[col_id][i], default=0xa)
+                                    })
+                else:
+                    temp = mutated_transposed[col_id][0] # Shouldn't be necessary
+                    print(temp)
+                    animation_tick({"coordinates": (col_id, 0),
+                                    "animation_id": 0x300 +
+                                        (1000 + temp if temp is not None else 0xa)
+                                    })
 
                 while j >= 0:
                     temp = mutated_transposed[col_id][j]
@@ -553,7 +572,7 @@ class GridManager(Thread):
             else:
                 for (col, i) in update_payload:
                     if self.detecte_combinaison(i, col):
-                        self._routine([(i, col)], animation_tick, solo=True)
+                        self.__routine([(i, col)], animation_tick, solo=True)
 
             # Do the animation stuff
             sleep(animation_wait_time / 1000) # TODO: maybe /2 when updated b4
