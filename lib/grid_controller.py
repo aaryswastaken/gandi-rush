@@ -144,7 +144,7 @@ class GridManager(Thread):
                                         animation_wait_time=self.animation_wait_time)
 
                         # If an error has been encountered, send an Error event
-                        if res != 1:
+                        if res != 0:
                             error_event = Event(1, Event.TYPE_GRID_TICK_ERROR,
                                                 {"permutation": permutation, "res": res})
                             print(f"Error when ticking: {res}")
@@ -436,13 +436,13 @@ class GridManager(Thread):
             __refresh (private): Wrapper for tick + gravity
         """
 
-        old_grid = self.grid.clone()
+        old_grid = self.clone()
         first = True
 
-        while self.grid.do_compare(old_grid) or first:
+        while self.do_compare(old_grid) or first:
             first = False
 
-            old_grid = self.grid.clone()
+            old_grid = self.clone()
 
             # HEAVILY UNOPTIMIZED
 
