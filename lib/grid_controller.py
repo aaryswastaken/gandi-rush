@@ -64,7 +64,7 @@ class GridManager(Thread):
         This class manages the grid and its physics
     """
 
-    def __init__(self, event_pool, generator, candy_count=5, animation_wait_time=0):
+    def __init__(self, event_pool, generator, animation_wait_time=0):
         # Initialise stuff, we don't care
         super().__init__()
         self.grid = []
@@ -73,12 +73,11 @@ class GridManager(Thread):
 
         self.event_pool = event_pool
         self.generator = generator
-        self.candy_count = candy_count
         self.animation_wait_time = animation_wait_time
 
         self.thread_stop_flag = False
 
-    def init_grid(self, size_x, size_y):
+    def init_grid(self, size_x, size_y, candy_count=5):
         """
             Generates a grid of requested dimentions
 
@@ -91,7 +90,7 @@ class GridManager(Thread):
         """
 
         # Generate the grid and refresh its cache
-        self.generator.init_sequence(size_x, size_y, self.candy_count)
+        self.generator.init_sequence(size_x, size_y, candy_count)
         self.generator.populate_grid_manager(self)
 
     def stop(self):
@@ -371,8 +370,7 @@ class GridManager(Thread):
         mutated_transposed = []
 
         # Create a new array that will store what line in the transposed has been updated
-        updated_line = []
-        updated_from = []
+        updated_temp = []
 
 
         # For every line of the transposed aka every column
@@ -430,17 +428,16 @@ class GridManager(Thread):
 
                 mutated_transposed.append(new_line)
 
-                updated_line.append(col_id)
-                updated_from.append(i)
+                updated_temp.append((col_id, i))
             else:
                 mutated_transposed.append(line)
 
-        if len(updated_line) > 0:
+        if len(updated_temp) > 0:
             print("Waiting...")
             sleep(animation_wait_time / 1000) # TODO : /2 ??
             print("waited :)")
 
-            for (col_id, i) in zip(updated_line, updated_from):
+            for (col_id, i) in updated_temp:
                 # We update the screen so that it's visible
 
                 j = i-1
@@ -464,7 +461,7 @@ class GridManager(Thread):
         # De-transpose
         self.from_transposed(mutated_transposed)
 
-        return (updated_line, updated_from)
+        return updated_temp
 
     def __routine(self, permutation, animation_tick=lambda payload: None, solo=False):
         """
@@ -548,15 +545,13 @@ class GridManager(Thread):
         old_grid = self.clone()
         first = True
 
-        (last_updated_cols, last_updated_from) = update_payload
-
         while self.do_compare(old_grid) or first:
             first = False
 
             old_grid = self.clone()
 
 
-            if len(last_updated_cols) == 0:
+            if len(update_payload) == 0:
                 # HEAVILY UNOPTIMIZED
 
                 # For every cell ...
@@ -567,14 +562,13 @@ class GridManager(Thread):
                             # If so, trigger a deletion of the group
                             self.__routine([(pos_x, pos_y)], animation_tick, solo=True)
             else:
-                for (col, i) in zip(last_updated_cols, last_updated_from):
+                for (col, i) in update_payload:
                     if self.detecte_combinaison(i, col):
                         self._routine([(i, col)], animation_tick, solo=True)
 
             # Do the animation stuff
             sleep(animation_wait_time / 1000) # TODO: maybe /2 when updated b4
-            (last_updated_cols, last_updated_from) = self.gravity_tick(animation_tick,
-                                                                       animation_wait_time)
+            update_payload = self.gravity_tick(animation_tick, animation_wait_time)
             sleep(animation_wait_time / 1000)
 
         return 0 # If everything is fine, return 0
