@@ -338,6 +338,19 @@ class GridManager(Thread):
         # If no matches, return False
         return False
 
+    def __sanitise_grid(self):
+        """
+            Updates the grid from the negatives to the positives
+
+            The negatives are here so that the test of "is there some guys that are aligned"
+                doesnt trigger on falling items
+        """
+
+        for (col_id, g_slice) in enumerate(self.grid):
+            for (i, grid_element) in enumerate(g_slice):
+                if default_val(grid_element, default=1) < 0:
+                    self.grid[col_id][i] = 1000 + grid_element
+
     def gravity_tick(self, animation_tick=lambda payload: None, animation_wait_time=0):
         """
             gravity_tick: Gravityyyy
@@ -350,6 +363,7 @@ class GridManager(Thread):
         """
 
         # We take the grid's transposition
+        self.__sanitise_grid()
         transposed = self.transpose()
         print(f"Gravity's transposed: {transposed}")
 
