@@ -6,23 +6,26 @@
 """
 
 from __future__ import absolute_import
-from tkinter import Canvas, StringVar, Label
+
+import os
+from threading import Thread
+from time import sleep
+
+from tkinter import Canvas, StringVar, Label, Tk
 from random import randint
 from PIL import Image, ImageTk
+from lib.event_pool_controller import Event
 
 
-
-SPRITE = []
+SPRITE = {}
 
 def load_sprites(sprite_home):
     """
         Loads the sprites
     """
 
-    for i in ["PierreBleu", "PierreJaune", "PierreRouge", "PierreVerte", "animation_destruction"]:
-        SPRITE.append(ImageTk.PhotoImage(Image.open(sprite_home+i+".png")
-                                         .resize((48, 48), Image.NEAREST)))
-
+    for i in os.listdir(sprite_home):
+        SPRITE[i]=(ImageTk.PhotoImage(Image.open(sprite_home+i).resize((48, 48), Image.NEAREST)))
 
 def configure_window(root):
     """
@@ -44,12 +47,13 @@ class MenuPrincipal:
     # Because this class manages tkinter things
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, root, sprite_home="../sprite/"):
+    def __init__(self, root,grille,event_pool,sprite_home="../sprite/"):
         self.root = root
-        self.jeu=FenetreDeJeu(self.root, sprite_home)
+        self.jeu=FenetreDeJeu(self.root, sprite_home, grille, event_pool)
         root.columnconfigure(0,)
         root.rowconfigure(0, weight=1)
         root.rowconfigure(1, weight=1)
+        self.grille=grille
         # Logo
         self.original_logo = Image.open(sprite_home+'Logo.png').convert('RGB')
         self.image_logo = ImageTk.PhotoImage(self.original_logo.resize((400, 300), Image.NEAREST))
@@ -89,7 +93,7 @@ class MenuPrincipal:
 
     def leave_menu(self, _):
         """
-        Fonction lancé pour détruire les éléments du menu
+            Fonction lancé pour détruire les éléments du menu
         """
 
         self.bouton.destroy()
@@ -97,7 +101,7 @@ class MenuPrincipal:
 
     def bouton_jouer_click(self, _):
         """
-        Lancement du jeu, fermeture du menu
+            Lancement du jeu, fermeture du menu
         """
 
         self.leave_menu(None)
@@ -109,7 +113,7 @@ class FenetreDeJeu():
     Decris la fenêtre de jeu
     """
 
-    def __init__(self, root, sprite_home):
+    def __init__(self, root, sprite_home, grille, event_pool):
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=0)
         root.rowconfigure(1, weight=0)
@@ -118,50 +122,86 @@ class FenetreDeJeu():
         self.root = root
         self.grille_element = []
         self.focus = (None, None)
-        self.grille_de_base = genere_alea(3)
+        self.grille_de_base = grille
         load_sprites(sprite_home)
-
+        self.event_pool=event_pool
+        self.running=True
 
     def lancer_jeu(self):
         """
-        Initialise le jeu
-
+            Initialise le jeu
         """
+
+        thread_one=Thread(target=self.event_clock)
+        thread_one.start()
         self.score = StringVar()
         text_score = Label(textvariable=self.score, bg="#73c2fa", font=("TkTooltipFont",25),
                            fg='#45283c')
         self.score.set("Score : 0")
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         text_score.grid(row=1, column=0)
-
-        self.root.bind("<Button-3>", lambda x: self.backgroundclick())
+        #where the lag is
         for (i, _element) in enumerate(self.grille_de_base):
             ligne_element = []
             for j in range(len(self.grille_de_base[0])):
                 tmp = Canvas(height=50, width=50, bd=0, highlightthickness=0, bg="#73c2fa")
-                tmp.create_image(0, 0, image=SPRITE[self.grille_de_base[i][j]],
+                tmp.create_image(0, 0, image=SPRITE["30"+str(self.grille_de_base[i][j])+".png"],
                                  anchor="nw", tag="nw")
                 tmp.grid(row=i+1, column=j+1, padx=1, pady=1)
-                tmp.bind("<Button-1>", lambda x, _i=i, _j=j:
-                         self.gemeclique(_i, _j, self.grille_de_base[_i][_j]))
+                tmp.bind("<Button-1>", lambda _x, _i=i, _j=j:
+                         self.gemeclique(_i, _j))
                 ligne_element.append(tmp)
             self.grille_element.append(ligne_element)
 
+    def on_closing(self):
+        """
+            When the window closes
+        """
+
+        try:
+            self.running=False
+            self.event_pool.push(Event(0,Event.TYPE_EXIT_ALL,{}))
+            self.root.destroy()
+        except RuntimeError: # lol
+            pass
+
+    def event_clock(self):
+        """
+            Function triggered to see events
+        """
+
+        while self.running:
+            event = self.event_pool.next_and_delete(1)
+            if event is not None:
+                if event.msg_type==1:
+                    pass # lol 2
+                if event.msg_type==2:
+                    self.grille_element \
+                        [event.payload['coordinates'][1]] \
+                        [event.payload['coordinates'][0]] \
+                        .delete("nw")
+                    self.grille_element \
+                        [event.payload['coordinates'][1]] \
+                        [event.payload['coordinates'][0]] \
+                        .create_image(0, 0, image=SPRITE[hex(event.payload['new_gem'])[2::]+".png"],
+                                      anchor="nw", tag="nw")
+                if event.msg_type==4:
+                    payload_score = event.payload["score"]
+                    self.score.set(f"Score: {payload_score}")
+
     def backgroundclick(self):
         """
-        Evenement si un clique hors grille est réalisé
+            Evenement si un clique hors grille est réalisé
         """
+
         if self.focus != (None, None):
             self.off_focus()
             self.focus = (None, None)
 
-    def gemeclique(self, i, j, value):
+    def gemeclique(self, i, j):
         """
-        Evenement si une gemme est cliqué
+            Evenement si une gemme est cliqué
         """
-
-        # Until is used
-        if value is None:
-            pass
 
         if self.focus == (None, None):
             self.focus = (i, j)
@@ -171,9 +211,9 @@ class FenetreDeJeu():
             self.focus = (i, j)
             self.on_focus(i, j)
         else:
-            self.grille_de_base[i][j], self.grille_de_base[self.focus[0]][self.focus[1]] = \
-                    self.grille_de_base[self.focus[0]][self.focus[1]], self.grille_de_base[i][j]
-            self.regenere([[i, j], [self.focus[0], self.focus[1]]])
+            self.event_pool.push(Event(0,Event.TYPE_GRID_PERMUTATION,
+                                       {"permutation":((j,i),(self.focus[1],self.focus[0]))}))
+
             self.off_focus()
             self.focus = (None, None)
 
@@ -183,11 +223,13 @@ class FenetreDeJeu():
             Cette fonction va être suprimé, source: TKT
         """
 
-        if not(j in (0, 14) or i in (0, 14)):
+        try:
             self.grille_element[i-1][j].config(bg="#FFFFFF")
             self.grille_element[i+1][j].config(bg="#FFFFFF")
             self.grille_element[i][j+1].config(bg="#FFFFFF")
             self.grille_element[i][j-1].config(bg="#FFFFFF")
+        except IndexError:
+            pass
 
     def off_focus(self):
         """
@@ -196,34 +238,31 @@ class FenetreDeJeu():
 
         i = self.focus[0]
         j = self.focus[1]
-        if not(j in (0, 14) or i in (0, 14)):
+        try:
             self.grille_element[int(i-1)][int(j)].config(bg="#73c2fa")
             self.grille_element[int(i+1)][int(j)].config(bg="#73c2fa")
             self.grille_element[int(i)][int(j+1)].config(bg="#73c2fa")
             self.grille_element[int(i)][int(j-1)].config(bg="#73c2fa")
-
-    def regenere(self, liste_pos):
-        """
-            Liste de coordonné à actualiser ((1,2)(3,4))...
-            Actualise les visuelles par rapport à la liste
-        """
-
-        for i, j in liste_pos:
-            self.grille_element[i][j].delete("nw")
-            self.grille_element[i][j].create_image(0, 0, image=SPRITE[self.grille_de_base[i][j]],
-                                                   anchor="nw", tag="nw")
-
-    def destroy(self, i, j):
-        """
-            Permet de detruire une case aux coordonnées i,j
-        """
-
-        self.grille_de_base[i][j] = 4
-        self.regenere([(i, j)])
+        except IndexError:
+            pass
 
 
 def genere_alea(nb_max):
     """
-    Fonction temporaire
+        Fonction temporaire
     """
-    return [[randint(0, nb_max) for i in range(15)] for j in range(15)]
+
+    return [[randint(1, nb_max+1) for i in range(15)] for j in range(15)]
+
+def main_loop(event_pool, sprite_home, _grid_manager):
+    """
+        Main loop of the file
+    """
+
+    window = Tk()
+    configure_window(window)
+    event_pool.push(Event(0,Event.TYPE_GEN_TRIGGER,{"grid_size":(15,15)}))
+    sleep(0.5)
+    tab = event_pool.next_and_delete(1).payload["grid"]
+    menu = MenuPrincipal(window, tab, event_pool, sprite_home=sprite_home)
+    menu.root.mainloop()

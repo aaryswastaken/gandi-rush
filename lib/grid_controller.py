@@ -5,7 +5,7 @@
         is a bit trash, we should create a grid class that is shared
         between both classes.
 
-    Author: @aaryswastaken
+    Author: @aaryswastaken, @Byllie
     Created Date: 03/13/2023
 """
 
@@ -64,20 +64,20 @@ class GridManager(Thread):
         This class manages the grid and its physics
     """
 
-    def __init__(self, event_pool, generator, candy_count=4, animation_wait_time=0):
+    def __init__(self, event_pool, generator, animation_wait_time=0):
         # Initialise stuff, we don't care
         super().__init__()
         self.grid = []
         self.grid_size = ()
+        self.score = 0
 
         self.event_pool = event_pool
         self.generator = generator
-        self.candy_count = candy_count
         self.animation_wait_time = animation_wait_time
 
         self.thread_stop_flag = False
 
-    def init_grid(self, size_x, size_y):
+    def init_grid(self, size_x, size_y, candy_count=5):
         """
             Generates a grid of requested dimentions
 
@@ -90,7 +90,7 @@ class GridManager(Thread):
         """
 
         # Generate the grid and refresh its cache
-        self.generator.init_sequence(size_x, size_y, self.candy_count)
+        self.generator.init_sequence(size_x, size_y, candy_count)
         self.generator.populate_grid_manager(self)
 
     def stop(self):
@@ -113,8 +113,8 @@ class GridManager(Thread):
 
         # This build an event towards the UI calling an update with the provided payload
         event = Event(1, Event.TYPE_UI_UPDATE,
-                      {"update_type": 1, "coordinates": payload.coordinates,
-                       "new_gem": payload.animation_id})
+                      {"update_type": 1, "coordinates": payload["coordinates"],
+                       "new_gem": payload["animation_id"]})
         self.event_pool.push(event)
 
     def run(self):
@@ -130,28 +130,31 @@ class GridManager(Thread):
             if event is not None:
                 # If is a permutation
                 if event.msg_type == Event.TYPE_GRID_PERMUTATION:
-                    permutation = event.payload["permuation"]
+                    permutation = event.payload["permutation"]
 
                     # If the payload is not well built, send an Error event
-                    if len(permutation) != 2 or isinstance(permutation, tuple):
+                    if len(permutation) != 2 or (not isinstance(permutation, tuple)):
                         error_event = Event(1, Event.TYPE_GRID_PERMUTATION_ERROR,
                                             {"permutation": permutation})
                         self.event_pool.push(error_event)
 
-                    # Do the actual permutation
-                    res = self.tick(permutation, animation_tick=self.__event_tick,
-                                    animation_wait_time=self.animation_wait_time)
+                    else:
+                        # Do the actual permutation
+                        res = self.tick(permutation, animation_tick=self.__event_tick,
+                                        animation_wait_time=self.animation_wait_time)
 
-                    # If an error has been encountered, send an Error event
-                    if res != 1:
-                        error_event = Event(1, Event.TYPE_GRID_TICK_ERROR,
-                                            {"permutation": permutation, "res": res})
-
-                        self.event_pool.push(error_event)
+                        # If an error has been encountered, send an Error event
+                        if res != 0:
+                            error_event = Event(1, Event.TYPE_GRID_TICK_ERROR,
+                                                {"permutation": permutation, "res": res})
+                            print(f"Error when ticking: {res}")
+                            self.event_pool.push(error_event)
                 elif event.msg_type == Event.TYPE_GEN_TRIGGER:
                     dimensions = event.payload["grid_size"]
 
                     self.init_grid(dimensions[0], dimensions[1])
+
+                    self.inject_grid()
                 elif event.msg_type == Event.TYPE_EXIT_ALL:
                     # Using stop instead of self.stop_flag = True in case we do some
                     # garbage collection in the method
@@ -310,6 +313,14 @@ class GridManager(Thread):
         actual_type = self.grid[j][i]
 
 
+        # To avoid None detection
+        if actual_type is None:
+            return False
+
+        # To avoid negative detection:
+        if actual_type < 0:
+            return False
+
         # Testing for horizontal matches
         if explore_adj(self.grid, i-1, j, actual_type) and \
                 explore_adj(self.grid, i+1, j, actual_type):
@@ -323,7 +334,20 @@ class GridManager(Thread):
         # If no matches, return False
         return False
 
-    def gravity_tick(self, animation_tick=lambda payload: None):
+    def __sanitise_grid(self):
+        """
+            Updates the grid from the negatives to the positives
+
+            The negatives are here so that the test of "is there some guys that are aligned"
+                doesnt trigger on falling items
+        """
+
+        for (col_id, g_slice) in enumerate(self.grid):
+            for (i, grid_element) in enumerate(g_slice):
+                if default_val(grid_element, default=1) < 0:
+                    self.grid[col_id][i] = 1000 + grid_element
+
+    def gravity_tick(self, animation_tick=lambda payload: None, animation_wait_time=0):
         """
             gravity_tick: Gravityyyy
 
@@ -335,47 +359,101 @@ class GridManager(Thread):
         """
 
         # We take the grid's transposition
-        transposed = self.grid.transpose()
+        self.__sanitise_grid()
+        transposed = self.transpose()
 
         # We initialise new grid in the transposed form
         mutated_transposed = []
 
+        # Create a new array that will store what line in the transposed has been updated
+        updated_temp = []
+
+
         # For every line of the transposed aka every column
         for (col_id, line) in enumerate(transposed):
-            if -1 in line: # If not, skip
-                i = len(line) - 1
-                n_occurences = sum(int(e is None) for e in line)
+            if None in line: # If the line doesn't have to be updated we skip it, otherwise:
+                i = len(line) - 1 # We start the cursor at the end
+                stop = False
 
-                # Migrates values:
-                # [2, -1, 4, 5, -1, 6] -> [-1, -1, 2, 4, 5, 6]
-                while i > (n_occurences-1):
-                    while line[i] is None:
-                        # On index i we move to the right, corresponding to the bottom
-                        # when transposed
+                # Migrates values but only the first:
+                # [2, -1, 4, 5, -1, 6] -> [-1, 2, -1, 4, 5, 6]
 
-                        an_id = 200
-                        an_id += default_val(line[i], default=0) * 10
-                        an_id += default_val(line[i-1], default=0) if i-1 >= 0 else 0
-
-                        # Tick the animation
-                        animation_tick({"coordinates": (i, col_id),
-                                        "animation_id": an_id})
-
-                        # Fill with None
-                        new_line = [None, *line[0:i], *line[(i+1):]]
-                        line = new_line
+                # We start to fetch where the first None is
+                while i >= 0 and not stop:
                     i -= 1
+                    if line[i] is None:
+                        stop = True
 
-            # Append the new line
-            mutated_transposed.append(line)
+                # We get a new gem
+                new_gem = self.generator.generate_cell()
+
+                j = i-1
+
+                # For when i == j, animate that i-1 is replacing None
+                an_id = 0x200
+                an_id += 0xa
+                an_id += default_val(line[i-1], default=0xa) * 16
+                animation_tick({"coordinates": (col_id, i),
+                                "animation_id": an_id})
+
+                # For all 0 < j < i -> Animate that it's going down
+                while j >= 1:
+                    an_id = 0x200
+                    an_id += default_val(line[j-1], default=0xa) * 16
+                    an_id += default_val(line[j], default=0xa)
+
+                    animation_tick({"coordinates": (col_id, j),
+                                    "animation_id": an_id})
+
+                    j -= 1
+
+                # For when j == 0, animate last going down and new cell coming
+                an_id = 0x200
+                an_id += new_gem * 16
+                an_id += default_val(line[j], default=0xa) # Should never default
+                animation_tick({"coordinates": (col_id, 0),
+                                "animation_id": an_id})
+
+
+                # Fill the actual line with every cell above the updated with inverted values
+                # so that they arent taken into account when testing if the bottom cell can react
+                new_line = [-1000+new_gem,
+                            *[-1000+e_ if e_ is not None else None for e_ in line[0:i-1]],
+                            line[i-1],
+                            *line[(i+1):]]
+
+                mutated_transposed.append(new_line)
+
+                updated_temp.append((col_id, i))
+            else:
+                mutated_transposed.append(line)
+
+        if len(updated_temp) > 0:
+            sleep(animation_wait_time / 1000) # TODO : /2 ??
+
+            for (col_id, i) in updated_temp:
+                # We update the screen so that it's visible
+
+                j = i-1
+
+                animation_tick({"coordinates": (col_id, i),
+                                "animation_id": 0x300 + default_val(mutated_transposed[col_id][i],
+                                                                    default=0xa)
+                                })
+
+                while j >= 0:
+                    temp = mutated_transposed[col_id][j]
+                    animation_tick({"coordinates": (col_id, j),
+                                    "animation_id": 0x300 +
+                                        (1000 + temp if temp is not None else 0xa)
+                                    })
+
+                    j -= 1
 
         # De-transpose
-        self.grid.from_transposed(mutated_transposed)
+        self.from_transposed(mutated_transposed)
 
-        # Repopulate
-        self.generator.fill_grid_manager_nones(self)
-
-        return 0
+        return updated_temp
 
     def __routine(self, permutation, animation_tick=lambda payload: None, solo=False):
         """
@@ -386,7 +464,7 @@ class GridManager(Thread):
 
         if not solo:
             # Permutations
-            self.grid.permute(permutation)
+            self.permute(permutation)
 
             to_delete0 = self.detecte_coordonnees_combinaison(permutation[0][0],
                                                               permutation[0][1])
@@ -400,7 +478,9 @@ class GridManager(Thread):
                                for coords in to_delete1)
 
             if not (is_detected0 or is_detected1):  # If there is no alignement on both permuted
-                self.grid.permute(permutation)  # Reset move
+                self.permute(permutation)  # Reset move
+                print("Is useless move")
+                print(f"Grid: {self.grid}")
                 return 2  # Useless move
 
             if is_detected0: # If there is an alignement on group zero, delete everything
@@ -413,49 +493,85 @@ class GridManager(Thread):
                 self.detecte_coordonnees_combinaison(permutation[0][0], permutation[0][1])
             ]
 
+        # Trigger the print of the permutation
+        if not solo:
+            animation_tick({"coordinates": (permutation[0][0], permutation[0][1]),
+                            "animation_id": 0x300 +
+                                self.grid[permutation[0][1]][permutation[0][0]]})
+
+            animation_tick({"coordinates": (permutation[1][0], permutation[1][1]),
+                            "animation_id": 0x300 +
+                                self.grid[permutation[1][1]][permutation[1][0]]})
+
+
         # For every cell group we have to delete
+        total = 0 # points
+
         for to_delete in to_delete_array:
             if len(to_delete) >= 3: # Little sanity check
+                total += len(to_delete)
+
                 for coords in to_delete: # For every deletion we have to operate
                     # Trigger an animation
                     animation_tick({"coordinates": (coords[0], coords[1]),
-                                    "animation_id": 100+self.grid[coords[1]][coords[0]]})
+                                    "animation_id": 0x100+self.grid[coords[1]][coords[0]]})
 
                     # Do the actual deletion
                     self.grid[coords[1]][coords[0]] = None
 
+        self.score += total
+
+        event = Event(1, Event.TYPE_SCORE_UPDATE, {"score": self.score})
+        self.event_pool.push(event)
+
         return 0 # If everything went fine, return 0
 
-    def __refresh(self, animation_tick=lambda payload: None, animation_wait_time=0):
+    def __refresh(self, update_payload, animation_tick=lambda payload: None, animation_wait_time=0):
         """
-            __refresh (private): Wrapper for tick + gravity
+            __refresh (private): Wrapper for deletion (routine ) + gravity
         """
 
-        old_grid = self.grid.clone()
+        old_grid = self.clone()
         first = True
 
-        while self.grid.do_compare(old_grid) or first:
+        while self.do_compare(old_grid) or first:
             first = False
 
-            old_grid = self.grid.clone()
+            old_grid = self.clone()
 
-            # HEAVILY UNOPTIMIZED
 
-            # For every cell ...
-            for (pos_y, grille_sl) in enumerate(self.grid):
-                for (pos_x, _e) in enumerate(grille_sl):
-                    # If there is a horizontal or vertical alignement
-                    if self.detecte_combinaison(pos_x, pos_y):
-                        # If so, trigger a deletion of the group
-                        self.__routine([(pos_x, pos_y)], animation_tick=animation_tick,
-                                       solo=True)
+            if len(update_payload) == 0:
+                # HEAVILY UNOPTIMIZED
+
+                # For every cell ...
+                for (pos_y, grille_sl) in enumerate(self.grid):
+                    for (pos_x, _e) in enumerate(grille_sl):
+                        # If there is a horizontal or vertical alignement
+                        if self.detecte_combinaison(pos_x, pos_y):
+                            # If so, trigger a deletion of the group
+                            self.__routine([(pos_x, pos_y)], animation_tick, solo=True)
+            else:
+                for (col, i) in update_payload:
+                    if self.detecte_combinaison(i, col):
+                        self._routine([(i, col)], animation_tick, solo=True)
 
             # Do the animation stuff
-            sleep(animation_wait_time / 1000)
-            self.gravity_tick(animation_tick=animation_tick)
+            sleep(animation_wait_time / 1000) # TODO: maybe /2 when updated b4
+            update_payload = self.gravity_tick(animation_tick, animation_wait_time)
             sleep(animation_wait_time / 1000)
 
         return 0 # If everything is fine, return 0
+
+
+#     def __push_final_gems(self, animation_tick):
+#         """
+#             __push_final_gems: Push when finished
+#         """
+#
+#         for (y_pos, g_slice) in enumerate(self.grid):
+#             for (x_pos, element) in enumerate(g_slice):
+#                 animation_tick({"coordinates": (x_pos, y_pos),
+#                                 "animation_id": 0x300 + element})
 
 
     def __tick(self, permutation, animation_tick=lambda payload: None, animation_wait_time=0):
@@ -466,17 +582,30 @@ class GridManager(Thread):
         # Do the actual move
         res = self.__routine(permutation, animation_tick=animation_tick)
         if res != 0:
+            print("Routine had an error")
             return res # If there is any error, returns it
 
         # Do a lil animation shit
         sleep(animation_wait_time / 1000)
-        self.gravity_tick(animation_tick=animation_tick)
+        update_payload = self.gravity_tick(animation_tick, animation_wait_time)
         sleep(animation_wait_time / 1000)
 
         # Call for the refresh
-        res = self.__refresh(animation_tick, animation_wait_time)
+        res = self.__refresh(update_payload, animation_tick, animation_wait_time)
 
-        return res # If there is any error, returns it
+        if res != 0:
+            print("Error when refreshed")
+            return res # If there is any error, returns it
+
+        # Now done in gravity_tick
+        # --------
+        # Else, push new gems to grid then reurn 0
+        # sleep(animation_wait_time / 1000)
+        # print("Going for the final gem update")
+        # self.__push_final_gems(animation_tick)
+        # --------
+
+        return 0
 
 
     def is_legal_permutation(self, permutation):
@@ -529,3 +658,12 @@ class GridManager(Thread):
 
         # Else, proceed with the move
         return self.__tick(permutation, animation_tick, animation_wait_time)
+
+    def inject_grid(self):
+        """
+            Takes the newly generated grid and sends its content to the
+                pool manager for the ui to print it
+        """
+
+        event = Event(1, Event.TYPE_UI_REFRESH, {"grid": self.clone()})
+        self.event_pool.push(event)

@@ -5,6 +5,8 @@
     Created Date: 03/16/2023
 """
 
+from time import sleep
+
 
 class EventPool():
     """
@@ -56,7 +58,12 @@ class EventPool():
         i = 0
         out = None
 
+
+        # For obscure reasons, removes concurrency issue
+        sleep(0.001)
+
         while i < len(self.stack) and out is None:
+            # print(i,len(self.stack))
             if self.stack[i].dest == dest:
                 out = self.stack.pop(i)
             i += 1
@@ -118,7 +125,6 @@ class EventPool():
             Returns
                 id (int): PooledEvent id
         """
-
         # Compute the id of the pooled event (pool id = pid)
         pid = len(self.stack) + 1
         pooled_event = event.derive_pooled_event(pid)  # Deive a pooled event
