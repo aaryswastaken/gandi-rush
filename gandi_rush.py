@@ -17,7 +17,7 @@ from lib.generator import GridGenerator
 if __name__ == "__main__":
     event_pool = EventPool()
     generator = GridGenerator()
-    grid_controller = GridManager(event_pool, generator, animation_wait_time=150)
+    grid_controller = GridManager(event_pool, generator, animation_wait_time=100)
     grid_controller.start()
 
     lib.window_controller.main_loop(event_pool,"./sprite/",grid_controller)
