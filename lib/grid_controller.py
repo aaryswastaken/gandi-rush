@@ -505,6 +505,7 @@ class GridManager(Thread):
             if len(to_delete) >= 3: # Little sanity check
                 for coords in to_delete: # For every deletion we have to operate
                     # Trigger an animation
+                    print(self.grid[coords[1]][coords[0]])
                     animation_tick({"coordinates": (coords[0], coords[1]),
                                     "animation_id": 0x100+self.grid[coords[1]][coords[0]]})
 
