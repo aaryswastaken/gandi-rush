@@ -320,6 +320,10 @@ class GridManager(Thread):
         if actual_type is None:
             return False
 
+        # To avoid negative detection:
+        if actual_type < 0:
+            return False
+
         # Testing for horizontal matches
         if explore_adj(self.grid, i-1, j, actual_type) and \
                 explore_adj(self.grid, i+1, j, actual_type):
@@ -333,7 +337,7 @@ class GridManager(Thread):
         # If no matches, return False
         return False
 
-    def gravity_tick(self, animation_tick=lambda payload: None):
+    def gravity_tick(self, animation_tick=lambda payload: None, animation_wait_time=0):
         """
             gravity_tick: Gravityyyy
 
@@ -346,88 +350,98 @@ class GridManager(Thread):
 
         # We take the grid's transposition
         transposed = self.transpose()
-
         print(f"Gravity's transposed: {transposed}")
 
         # We initialise new grid in the transposed form
         mutated_transposed = []
 
+        # Create a new array that will store what line in the transposed has been updated
+        updated_line = []
+        updated_from = []
+
+
         # For every line of the transposed aka every column
         for (col_id, line) in enumerate(transposed):
-            if None in line: # If not, skip
-                i = len(line) - 1
-                n_occurences = sum(int(e is None) for e in line)
+            if None in line: # If the line doesn't have to be updated we skip it, otherwise:
+                i = len(line) - 1 # We start the cursor at the end
+                stop = False
 
-                print(f"Occurences: {n_occurences}")
+                # Migrates values but only the first:
+                # [2, -1, 4, 5, -1, 6] -> [-1, 2, -1, 4, 5, 6]
 
-                # Migrates values:
-                # [2, -1, 4, 5, -1, 6] -> [-1, -1, 2, 4, 5, 6]
-                while i > (n_occurences-1):
-                    while line[i] is None:
-                        # On index i we move to the right, corresponding to the bottom
-                        # when transposed
+                # We start to fetch where the first None is
+                while i >= 0 and not stop:
+                    if line[i] is None:
+                        stop = True
 
+                # We get a new gem
+                new_gem = self.generator.generate_cell()
 
-                        # This code loses steps:
-                        # -------
-                        # an_id = 0x200
-                        # an_id += default_val(line[i], default=0) * 16
-                        # an_id += default_val(line[i-1], default=0) if i-1 >= 0 else 0xa
-                        #
-                        # Tick the animation
-                        # print("Gravity animation :)")
-                        # animation_tick({"coordinates": (i, col_id),
-                        #                 "animation_id": an_id})
-                        # -------
+                j = i-1
 
-                        new_gem = self.generator.generate_cell()
+                # For when i == j, animate that i-1 is replacing None
+                an_id = 0x200
+                an_id += 0xa
+                an_id += default_val(line[i-1], default=0xa) * 16
+                animation_tick({"coordinates": (col_id, i),
+                                "animation_id": an_id})
 
-                        j = i-1
+                # For all 0 < j < i -> Animate that it's going down
+                while j >= 1:
+                    an_id = 0x200
+                    an_id += default_val(line[j-1], default=0xa) * 16
+                    an_id += default_val(line[j], default=0xa)
 
-                        # For when i == j
-                        an_id = 0x200
-                        an_id += 0xa
-                        an_id += default_val(line[i-1], default=0xa) * 16
-                        animation_tick({"coordinates": (col_id, i),
-                                        "animation_id": an_id})
+                    animation_tick({"coordinates": (col_id, j),
+                                    "animation_id": an_id})
 
-                        while j >= 1:
-                            an_id = 0x200
-                            an_id += default_val(line[j-1], default=0xa) * 16
-                            an_id += default_val(line[j], default=0xa)
+                    j -= 1
 
-                            animation_tick({"coordinates": (col_id, j),
-                                            "animation_id": an_id})
-
-                            j -= 1
-
-                        # For when j == 0
-                        an_id = 0x200
-                        an_id += new_gem * 16
-                        an_id += default_val(line[j], default=0xa) # Should never default
-                        animation_tick({"coordinates": (col_id, 0),
-                                        "animation_id": an_id})
+                # For when j == 0, animate last going down and new cell coming
+                an_id = 0x200
+                an_id += new_gem * 16
+                an_id += default_val(line[j], default=0xa) # Should never default
+                animation_tick({"coordinates": (col_id, 0),
+                                "animation_id": an_id})
 
 
-                        # Fill with the new one
-                        new_line = [new_gem, *line[0:i], *line[(i+1):]]
-                        line = new_line
+                # Fill the actual line with every cell above the updated with inverted values
+                # so that they arent taken into account when testing if the bottom cell can react
+                new_line = [1000-new_gem,
+                            *[1000-e_ if e_ is not None else None for e_ in line[0:i-1]],
+                            line[i],
+                            *line[(i+1):]]
 
-                        print(line)
-                    i -= 1
+                mutated_transposed.append(new_line)
 
-            # Append the new line
-            mutated_transposed.append(line)
+                updated_line.append(col_id)
+                updated_from.append(i)
+            else:
+                mutated_transposed.append(line)
+
+        if len(updated_line) > 0:
+            sleep(animation_wait_time / 1000) # TODO : /2 ??
+
+            for (col_id, i) in zip(updated_line, updated_from):
+                # We update the screen so that it's visible
+
+                j = i-1
+
+                animation_tick({"coordinates": (col_id, i),
+                                "animaion_id": 0x300 + mutated_transposed[col_id][i]})
+
+                while j >= 0:
+                    animation_tick({"coordinates": (col_id, j),
+                                    "animation_id": 0x300 + 1000 + mutated_transposed[col_id][j]})
+
+                    j -= 1
 
         print(f"After gravity transposed: {mutated_transposed}")
 
         # De-transpose
         self.from_transposed(mutated_transposed)
 
-        # Repopulate
-        # self.generator.fill_grid_manager_nones(self)
-
-        return 0
+        return (updated_line, updated_from)
 
     def __routine(self, permutation, animation_tick=lambda payload: None, solo=False):
         """
@@ -467,6 +481,17 @@ class GridManager(Thread):
                 self.detecte_coordonnees_combinaison(permutation[0][0], permutation[0][1])
             ]
 
+        # Trigger the print of the permutation
+        if not solo:
+            animation_tick({"coordinates": (permutation[0][0], permutation[0][1]),
+                            "animation_id": 0x100 +
+                                self.grid[permutation[0][1]][permutation[0][0]]})
+
+            animation_tick({"coordinates": (permutation[1][0], permutation[1][1]),
+                            "animation_id": 0x100 +
+                                self.grid[permutation[1][1]][permutation[1][0]]})
+
+
         # For every cell group we have to delete
         for to_delete in to_delete_array:
             if len(to_delete) >= 3: # Little sanity check
@@ -480,47 +505,55 @@ class GridManager(Thread):
 
         return 0 # If everything went fine, return 0
 
-    def __refresh(self, animation_tick=lambda payload: None, animation_wait_time=0):
+    def __refresh(self, update_payload, animation_tick=lambda payload: None, animation_wait_time=0):
         """
-            __refresh (private): Wrapper for tick + gravity
+            __refresh (private): Wrapper for deletion (routine ) + gravity
         """
 
         old_grid = self.clone()
         first = True
+
+        (last_updated_cols, last_updated_from) = update_payload
 
         while self.do_compare(old_grid) or first:
             first = False
 
             old_grid = self.clone()
 
-            # HEAVILY UNOPTIMIZED
 
-            # For every cell ...
-            for (pos_y, grille_sl) in enumerate(self.grid):
-                for (pos_x, _e) in enumerate(grille_sl):
-                    # If there is a horizontal or vertical alignement
-                    if self.detecte_combinaison(pos_x, pos_y):
-                        # If so, trigger a deletion of the group
-                        self.__routine([(pos_x, pos_y)], animation_tick=animation_tick,
-                                       solo=True)
+            if len(last_updated_cols) == 0:
+                # HEAVILY UNOPTIMIZED
+
+                # For every cell ...
+                for (pos_y, grille_sl) in enumerate(self.grid):
+                    for (pos_x, _e) in enumerate(grille_sl):
+                        # If there is a horizontal or vertical alignement
+                        if self.detecte_combinaison(pos_x, pos_y):
+                            # If so, trigger a deletion of the group
+                            self.__routine([(pos_x, pos_y)], animation_tick, solo=True)
+            else:
+                for (col, i) in zip(last_updated_cols, last_updated_from):
+                    if self.detecte_combinaison(i, col):
+                        self._routine([(i, col)], animation_tick, solo=True)
 
             # Do the animation stuff
-            sleep(animation_wait_time / 1000)
-            self.gravity_tick(animation_tick=animation_tick)
+            sleep(animation_wait_time / 1000) # TODO: maybe /2 when updated b4
+            (last_updated_cols, last_updated_from) = self.gravity_tick(animation_tick,
+                                                                       animation_wait_time)
             sleep(animation_wait_time / 1000)
 
         return 0 # If everything is fine, return 0
 
 
-    def __push_final_gems(self, animation_tick):
-        """
-            __push_final_gems: Push when finished
-        """
-
-        for (y_pos, g_slice) in enumerate(self.grid):
-            for (x_pos, element) in enumerate(g_slice):
-                animation_tick({"coordinates": (x_pos, y_pos),
-                                "animation_id": 0x300 + element})
+#     def __push_final_gems(self, animation_tick):
+#         """
+#             __push_final_gems: Push when finished
+#         """
+#
+#         for (y_pos, g_slice) in enumerate(self.grid):
+#             for (x_pos, element) in enumerate(g_slice):
+#                 animation_tick({"coordinates": (x_pos, y_pos),
+#                                 "animation_id": 0x300 + element})
 
 
     def __tick(self, permutation, animation_tick=lambda payload: None, animation_wait_time=0):
@@ -537,22 +570,25 @@ class GridManager(Thread):
         # Do a lil animation shit
         sleep(animation_wait_time / 1000)
         print("Gravity tick")
-        self.gravity_tick(animation_tick=animation_tick)
+        update_payload = self.gravity_tick(animation_tick=animation_tick)
         print("Gravity ticked")
         sleep(animation_wait_time / 1000)
 
         # Call for the refresh
         print("Going for the refresh")
-        res = self.__refresh(animation_tick, animation_wait_time)
+        res = self.__refresh(update_payload, animation_tick, animation_wait_time)
 
         if res != 0:
             print("Error when refreshed")
             return res # If there is any error, returns it
 
+        # Now done in gravity_tick
+        # --------
         # Else, push new gems to grid then reurn 0
-        sleep(animation_wait_time / 1000)
-        print("Going for the final gem update")
-        self.__push_final_gems(animation_tick)
+        # sleep(animation_wait_time / 1000)
+        # print("Going for the final gem update")
+        # self.__push_final_gems(animation_tick)
+        # --------
 
         return 0
 
