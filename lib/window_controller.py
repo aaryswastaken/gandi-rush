@@ -125,6 +125,7 @@ class FenetreDeJeu():
         self.grille_de_base = grille
         load_sprites(sprite_home)
         self.event_pool=event_pool
+        self.running=True
 
     def lancer_jeu(self):
         """
@@ -137,6 +138,7 @@ class FenetreDeJeu():
         text_score = Label(textvariable=self.score, bg="#73c2fa", font=("TkTooltipFont",25),
                            fg='#45283c')
         self.score.set("Score : 0")
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         text_score.grid(row=1, column=0)
         #where the lag is
         for (i, _element) in enumerate(self.grille_de_base):
@@ -150,13 +152,19 @@ class FenetreDeJeu():
                          self.gemeclique(_i, _j))
                 ligne_element.append(tmp)
             self.grille_element.append(ligne_element)
-
+    def on_closing(self):
+        try:
+            self.running=False
+            self.event_pool.push(Event(0,Event.TYPE_EXIT_ALL,{}))
+            self.root.destroy()
+        except:
+            pass
     def event_clock(self):
         """
             Function triggered to see events
         """
 
-        while True:
+        while self.running:
             event = self.event_pool.next_and_delete(1)
             if event is not None:
                 if event.msg_type==1:
@@ -227,20 +235,6 @@ class FenetreDeJeu():
             self.grille_element[int(i)][int(j-1)].config(bg="#73c2fa")
         except IndexError:
             pass
-
-    def regenere(self, liste_pos):
-        """
-            Liste de coordonné à actualiser ((1,2)(3,4))...
-            Actualise les visuelles par rapport à la liste
-        """
-
-        for i, j in liste_pos:
-            self.grille_element[i][j].delete("nw")
-            self.grille_element[i][j].create_image(0, 0,
-                                                   image=SPRITE["00"+
-                                                                str(self.grille_de_base[i][j])+
-                                                                ".png"],
-                                                   anchor="nw", tag="nw")
 
 
 def genere_alea(nb_max):
