@@ -46,9 +46,12 @@ class MenuPrincipal:
     # Because this class manages tkinter things
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, root,grille,event_pool,sprite_home="../sprite/"):
+    def __init__(self, root, grille, event_pool, sprite_home="../sprite/", debug=False):
+        # pylint: disable=too-many-arguments
         self.root = root
-        self.jeu=FenetreDeJeu(self.root, sprite_home, grille, event_pool)
+        self.__debug = debug
+
+        self.jeu=FenetreDeJeu(self.root, sprite_home, grille, event_pool, debug=self.__debug)
         root.columnconfigure(0,)
         root.rowconfigure(0, weight=1)
         root.rowconfigure(1, weight=1)
@@ -56,8 +59,9 @@ class MenuPrincipal:
         # Logo
         self.original_logo = Image.open(sprite_home+'Logo.png').convert('RGB')
         self.image_logo = ImageTk.PhotoImage(self.original_logo.resize((400, 300), Image.NEAREST))
-        self.logo = Canvas(root, height=300, width=400, borderwidth=0, highlightthickness=0)
-        self.logo.create_image(0, 0, image=self.image_logo, anchor='nw')
+        self.logo = Canvas(root, height=300+50, width=400, borderwidth=0, highlightthickness=0)
+        self.logo.configure(bg="#73c3fa")
+        self.logo.create_image(0, 50, image=self.image_logo, anchor='nw')
         # BoutonJouer
         self.original_bouton1 = Image.open(sprite_home+"Bouton1.png")
         self.original_bouton2 = Image.open(sprite_home+"Bouton2.png")
@@ -112,7 +116,8 @@ class FenetreDeJeu():
     Decris la fenêtre de jeu
     """
 
-    def __init__(self, root, sprite_home, grille, event_pool):
+    def __init__(self, root, sprite_home, grille, event_pool, debug=False):
+        # pylint: disable=too-many-arguments
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=0)
         root.rowconfigure(1, weight=0)
@@ -126,6 +131,8 @@ class FenetreDeJeu():
         self.event_pool=event_pool
         self.running=True
 
+        self.__debug = debug
+
     def lancer_jeu(self):
         """
             Initialise le jeu
@@ -134,11 +141,11 @@ class FenetreDeJeu():
         thread_one=Thread(target=self.event_clock)
         thread_one.start()
         self.score = StringVar()
-        text_score = Label(textvariable=self.score, bg="#73c2fa", font=("TkTooltipFont",25),
+        text_score = Label(textvariable=self.score, bg="#73c2fa", font=("Courier",26),
                            fg='#45283c')
-        self.score.set("Score: 000")
+        self.score.set(f"Score: {0: 4d}")
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
-        text_score.grid(row=1, column=0)
+        text_score.grid(row=2, column=0, sticky="W", padx=(25, 20))
         for (i, _element) in enumerate(self.grille_de_base):
             ligne_element = []
             for j in range(len(self.grille_de_base[0])):
@@ -184,8 +191,10 @@ class FenetreDeJeu():
                         .create_image(0, 0, image=SPRITE[hex(event.payload['new_gem'])[2::]+".png"],
                                       anchor="nw", tag="nw")
                 if event.msg_type==4:
+                    if self.__debug:
+                        print("Score update!")
                     payload_score = event.payload["score"]
-                    self.score.set(f"Score: {payload_score:03d}")
+                    self.score.set(f"Score: {payload_score: 4d}")
 
     def backgroundclick(self):
         """
@@ -245,7 +254,7 @@ class FenetreDeJeu():
 
 
 
-def main_loop(event_pool, sprite_home, _grid_manager):
+def main_loop(event_pool, sprite_home, _grid_manager, debug=False):
     """
         Main loop of the file
     """
@@ -255,5 +264,5 @@ def main_loop(event_pool, sprite_home, _grid_manager):
     event_pool.push(Event(0,Event.TYPE_GEN_TRIGGER,{"grid_size":(15,15)}))
     sleep(0.5)
     tab = event_pool.next_and_delete(1).payload["grid"]
-    menu = MenuPrincipal(window, tab, event_pool, sprite_home=sprite_home)
+    menu = MenuPrincipal(window, tab, event_pool, sprite_home=sprite_home, debug=debug)
     menu.root.mainloop()

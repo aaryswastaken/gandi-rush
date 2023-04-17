@@ -8,6 +8,8 @@ Pour lancer le projet, il faut lancer **gandy_rush.py**
 
 Ne pas faire de mouvement de gemmes pendant les animations
 
+Toute la documentation est dans `documentation.md`
+
 Des bisous, les  devs
 
 
