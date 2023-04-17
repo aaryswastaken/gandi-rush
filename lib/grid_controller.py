@@ -64,7 +64,7 @@ class GridManager(Thread):
         This class manages the grid and its physics
     """
 
-    def __init__(self, event_pool, generator, animation_wait_time=0):
+    def __init__(self, event_pool, generator, animation_wait_time=0, debug=False):
         # Initialise stuff, we don't care
         super().__init__()
         self.grid = []
@@ -76,6 +76,7 @@ class GridManager(Thread):
         self.animation_wait_time = animation_wait_time
 
         self.thread_stop_flag = False
+        self.__debug = debug
 
     def init_grid(self, size_x, size_y, candy_count=5):
         """
@@ -88,6 +89,9 @@ class GridManager(Thread):
             Returns:
                 None
         """
+
+        if self.__debug:
+            print("Initialising the grid...")
 
         # Generate the grid and refresh its cache
         self.generator.init_sequence(size_x, size_y, candy_count)
@@ -156,7 +160,8 @@ class GridManager(Thread):
 
                     self.inject_grid()
 
-                    print(self.grid)
+                    if self.__debug:
+                        print(f"[*] Generated grid: {self.grid}")
                 elif event.msg_type == Event.TYPE_EXIT_ALL:
                     # Using stop instead of self.stop_flag = True in case we do some
                     # garbage collection in the method
@@ -360,7 +365,7 @@ class GridManager(Thread):
                 None
         """
 
-        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-branches,too-many-statements
 
         # We take the grid's transposition
         self.__sanitise_grid()
@@ -372,7 +377,8 @@ class GridManager(Thread):
         # Create a new array that will store what line in the transposed has been updated
         updated_temp = []
 
-        print(f"Before gravity tick: {transposed}")
+        if self.__debug:
+            print(f"Before gravity tick: {transposed}")
 
 
         # For every line of the transposed aka every column
@@ -405,7 +411,8 @@ class GridManager(Thread):
                     animation_tick({"coordinates": (col_id, i),
                                     "animation_id": an_id})
 
-                    print(f"Triggering {hex(an_id)} for ({col_id}, {i})")
+                    if self.__debug:
+                        print(f"Triggering {hex(an_id)} for ({col_id}, {i})")
 
                     # For all 0 < j < i -> Animate that it's going down
                     while j >= 1:
@@ -477,7 +484,8 @@ class GridManager(Thread):
 
                     j -= 1
 
-        print(f"After gravity tick: {mutated_transposed}")
+        if self.__debug:
+            print(f"After gravity tick: {mutated_transposed}")
 
         # De-transpose
         self.from_transposed(mutated_transposed)
@@ -548,7 +556,8 @@ class GridManager(Thread):
                     # Do the actual deletion
                     self.grid[coords[1]][coords[0]] = None
 
-        print(f"After deletion: {self.grid}")
+        if self.__debug:
+            print(f"After deletion: {self.grid}")
 
         self.score += total
 

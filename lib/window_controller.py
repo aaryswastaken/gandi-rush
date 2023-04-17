@@ -46,9 +46,12 @@ class MenuPrincipal:
     # Because this class manages tkinter things
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, root,grille,event_pool,sprite_home="../sprite/"):
+    def __init__(self, root, grille, event_pool, sprite_home="../sprite/", debug=False):
+        # pylint: disable=too-many-arguments
         self.root = root
-        self.jeu=FenetreDeJeu(self.root, sprite_home, grille, event_pool)
+        self.__debug = debug
+
+        self.jeu=FenetreDeJeu(self.root, sprite_home, grille, event_pool, debug=self.__debug)
         root.columnconfigure(0,)
         root.rowconfigure(0, weight=1)
         root.rowconfigure(1, weight=1)
@@ -112,7 +115,8 @@ class FenetreDeJeu():
     Decris la fenêtre de jeu
     """
 
-    def __init__(self, root, sprite_home, grille, event_pool):
+    def __init__(self, root, sprite_home, grille, event_pool, debug=False):
+        # pylint: disable=too-many-arguments
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=0)
         root.rowconfigure(1, weight=0)
@@ -125,6 +129,8 @@ class FenetreDeJeu():
         load_sprites(sprite_home)
         self.event_pool=event_pool
         self.running=True
+
+        self.__debug = debug
 
     def lancer_jeu(self):
         """
@@ -184,6 +190,8 @@ class FenetreDeJeu():
                         .create_image(0, 0, image=SPRITE[hex(event.payload['new_gem'])[2::]+".png"],
                                       anchor="nw", tag="nw")
                 if event.msg_type==4:
+                    if self.__debug:
+                        print("Score update!")
                     payload_score = event.payload["score"]
                     self.score.set(f"Score: {payload_score:03d}")
 
@@ -245,7 +253,7 @@ class FenetreDeJeu():
 
 
 
-def main_loop(event_pool, sprite_home, _grid_manager):
+def main_loop(event_pool, sprite_home, _grid_manager, debug=False):
     """
         Main loop of the file
     """
@@ -255,5 +263,5 @@ def main_loop(event_pool, sprite_home, _grid_manager):
     event_pool.push(Event(0,Event.TYPE_GEN_TRIGGER,{"grid_size":(15,15)}))
     sleep(0.5)
     tab = event_pool.next_and_delete(1).payload["grid"]
-    menu = MenuPrincipal(window, tab, event_pool, sprite_home=sprite_home)
+    menu = MenuPrincipal(window, tab, event_pool, sprite_home=sprite_home, debug=debug)
     menu.root.mainloop()
