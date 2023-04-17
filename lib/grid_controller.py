@@ -64,7 +64,7 @@ class GridManager(Thread):
         This class manages the grid and its physics
     """
 
-    def __init__(self, event_pool, generator, animation_wait_time=0):
+    def __init__(self, event_pool, generator, animation_wait_time=0, debug=False):
         # Initialise stuff, we don't care
         super().__init__()
         self.grid = []
@@ -76,6 +76,7 @@ class GridManager(Thread):
         self.animation_wait_time = animation_wait_time
 
         self.thread_stop_flag = False
+        self.__debug = debug
 
     def init_grid(self, size_x, size_y, candy_count=5):
         """
@@ -88,6 +89,9 @@ class GridManager(Thread):
             Returns:
                 None
         """
+
+        if self.__debug:
+            print("Initialising the grid...")
 
         # Generate the grid and refresh its cache
         self.generator.init_sequence(size_x, size_y, candy_count)
@@ -122,6 +126,8 @@ class GridManager(Thread):
             Main loop
         """
 
+        # pylint: disable=too-many-branches,too-many-nested-blocks
+
         while not self.thread_stop_flag:
             # Fetch the next event towards the manager
             event = self.event_pool.next_and_delete(0)
@@ -147,7 +153,15 @@ class GridManager(Thread):
                         if res != 0:
                             error_event = Event(1, Event.TYPE_GRID_TICK_ERROR,
                                                 {"permutation": permutation, "res": res})
-                            print(f"Error when ticking: {res}")
+                            if self.__debug:
+                                print(f"Error when ticking: {res}")
+                            else:
+                                if res == 1:
+                                    print("Illegal move")
+                                elif res == 2:
+                                    print("Legal move but absolutely useless")
+                                else:
+                                    print("Unknown error x)")
                             self.event_pool.push(error_event)
                 elif event.msg_type == Event.TYPE_GEN_TRIGGER:
                     dimensions = event.payload["grid_size"]
@@ -155,6 +169,9 @@ class GridManager(Thread):
                     self.init_grid(dimensions[0], dimensions[1])
 
                     self.inject_grid()
+
+                    if self.__debug:
+                        print(f"[*] Generated grid: {self.grid}")
                 elif event.msg_type == Event.TYPE_EXIT_ALL:
                     # Using stop instead of self.stop_flag = True in case we do some
                     # garbage collection in the method
@@ -358,7 +375,7 @@ class GridManager(Thread):
                 None
         """
 
-        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-branches,too-many-statements
 
         # We take the grid's transposition
         self.__sanitise_grid()
@@ -369,6 +386,9 @@ class GridManager(Thread):
 
         # Create a new array that will store what line in the transposed has been updated
         updated_temp = []
+
+        if self.__debug:
+            print(f"Before gravity tick: {transposed}")
 
 
         # For every line of the transposed aka every column
@@ -382,9 +402,11 @@ class GridManager(Thread):
 
                 # We start to fetch where the first None is
                 while i >= 0 and not stop:
-                    i -= 1
                     if line[i] is None:
                         stop = True
+                    i -= 1
+
+                i += 1
 
                 # We get a new gem
                 new_gem = self.generator.generate_cell()
@@ -398,6 +420,9 @@ class GridManager(Thread):
                     an_id += default_val(line[i-1], default=0xa) * 16
                     animation_tick({"coordinates": (col_id, i),
                                     "animation_id": an_id})
+
+                    if self.__debug:
+                        print(f"Triggering {hex(an_id)} for ({col_id}, {i})")
 
                     # For all 0 < j < i -> Animate that it's going down
                     while j >= 1:
@@ -469,6 +494,9 @@ class GridManager(Thread):
 
                     j -= 1
 
+        if self.__debug:
+            print(f"After gravity tick: {mutated_transposed}")
+
         # De-transpose
         self.from_transposed(mutated_transposed)
 
@@ -498,8 +526,10 @@ class GridManager(Thread):
 
             if not (is_detected0 or is_detected1):  # If there is no alignement on both permuted
                 self.permute(permutation)  # Reset move
-                print("Is useless move")
-                print(f"Grid: {self.grid}")
+
+                if self.__debug:
+                    print("Is useless move")
+                    print(f"Grid: {self.grid}")
                 return 2  # Useless move
 
             if is_detected0: # If there is an alignement on group zero, delete everything
@@ -537,6 +567,9 @@ class GridManager(Thread):
 
                     # Do the actual deletion
                     self.grid[coords[1]][coords[0]] = None
+
+        if self.__debug:
+            print(f"After deletion: {self.grid}")
 
         self.score += total
 
@@ -601,7 +634,8 @@ class GridManager(Thread):
         # Do the actual move
         res = self.__routine(permutation, animation_tick=animation_tick)
         if res != 0:
-            print("Routine had an error")
+            if self.__debug:
+                print("Routine had an error")
             return res # If there is any error, returns it
 
         # Do a lil animation shit
@@ -613,7 +647,8 @@ class GridManager(Thread):
         res = self.__refresh(update_payload, animation_tick, animation_wait_time)
 
         if res != 0:
-            print("Error when refreshed")
+            if self.__debug:
+                print("Error when refreshed")
             return res # If there is any error, returns it
 
         # Now done in gravity_tick
