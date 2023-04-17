@@ -1,7 +1,7 @@
 """
     Main orchestrator for gandi-rush
 
-    Author: @aaryswastaken
+    Author: @aaryswastaken, @Byllie
     Creation Date: 04/04/2023
 """
 

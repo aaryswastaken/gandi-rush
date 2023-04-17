@@ -59,8 +59,9 @@ class MenuPrincipal:
         # Logo
         self.original_logo = Image.open(sprite_home+'Logo.png').convert('RGB')
         self.image_logo = ImageTk.PhotoImage(self.original_logo.resize((400, 300), Image.NEAREST))
-        self.logo = Canvas(root, height=300, width=400, borderwidth=0, highlightthickness=0)
-        self.logo.create_image(0, 0, image=self.image_logo, anchor='nw')
+        self.logo = Canvas(root, height=300+50, width=400, borderwidth=0, highlightthickness=0)
+        self.logo.configure(bg="#73c3fa")
+        self.logo.create_image(0, 50, image=self.image_logo, anchor='nw')
         # BoutonJouer
         self.original_bouton1 = Image.open(sprite_home+"Bouton1.png")
         self.original_bouton2 = Image.open(sprite_home+"Bouton2.png")
@@ -140,11 +141,11 @@ class FenetreDeJeu():
         thread_one=Thread(target=self.event_clock)
         thread_one.start()
         self.score = StringVar()
-        text_score = Label(textvariable=self.score, bg="#73c2fa", font=("TkTooltipFont",25),
+        text_score = Label(textvariable=self.score, bg="#73c2fa", font=("Courier",26),
                            fg='#45283c')
-        self.score.set("Score: 000")
+        self.score.set(f"Score: {0: 4d}")
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
-        text_score.grid(row=1, column=0)
+        text_score.grid(row=2, column=0, sticky="W", padx=(25, 20))
         for (i, _element) in enumerate(self.grille_de_base):
             ligne_element = []
             for j in range(len(self.grille_de_base[0])):
@@ -193,7 +194,7 @@ class FenetreDeJeu():
                     if self.__debug:
                         print("Score update!")
                     payload_score = event.payload["score"]
-                    self.score.set(f"Score: {payload_score:03d}")
+                    self.score.set(f"Score: {payload_score: 4d}")
 
     def backgroundclick(self):
         """
