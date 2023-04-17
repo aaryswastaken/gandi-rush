@@ -155,6 +155,8 @@ class GridManager(Thread):
                     self.init_grid(dimensions[0], dimensions[1])
 
                     self.inject_grid()
+
+                    print(self.grid)
                 elif event.msg_type == Event.TYPE_EXIT_ALL:
                     # Using stop instead of self.stop_flag = True in case we do some
                     # garbage collection in the method
@@ -370,6 +372,8 @@ class GridManager(Thread):
         # Create a new array that will store what line in the transposed has been updated
         updated_temp = []
 
+        print(f"Before gravity tick: {transposed}")
+
 
         # For every line of the transposed aka every column
         for (col_id, line) in enumerate(transposed):
@@ -382,9 +386,11 @@ class GridManager(Thread):
 
                 # We start to fetch where the first None is
                 while i >= 0 and not stop:
-                    i -= 1
                     if line[i] is None:
                         stop = True
+                    i -= 1
+
+                i += 1
 
                 # We get a new gem
                 new_gem = self.generator.generate_cell()
@@ -398,6 +404,8 @@ class GridManager(Thread):
                     an_id += default_val(line[i-1], default=0xa) * 16
                     animation_tick({"coordinates": (col_id, i),
                                     "animation_id": an_id})
+
+                    print(f"Triggering {hex(an_id)} for ({col_id}, {i})")
 
                     # For all 0 < j < i -> Animate that it's going down
                     while j >= 1:
@@ -469,6 +477,8 @@ class GridManager(Thread):
 
                     j -= 1
 
+        print(f"After gravity tick: {mutated_transposed}")
+
         # De-transpose
         self.from_transposed(mutated_transposed)
 
@@ -537,6 +547,8 @@ class GridManager(Thread):
 
                     # Do the actual deletion
                     self.grid[coords[1]][coords[0]] = None
+
+        print(f"After deletion: {self.grid}")
 
         self.score += total
 
