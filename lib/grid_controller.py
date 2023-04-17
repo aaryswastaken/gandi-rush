@@ -263,7 +263,9 @@ class GridManager(Thread):
                 res (bool): True if different
         """
 
-        return any(any(e[0] != e[1] for e in zip(*grilles_slice))
+        # If an element is negative, it means the cell is falling so we cant exit
+
+        return any(any((e[0] != e[1] or e[1] < 0) for e in zip(*grilles_slice))
                    for grilles_slice in zip(self.grid, grille))
 
     def detecte_coordonnees_combinaison(self, i, j):
@@ -604,6 +606,9 @@ class GridManager(Thread):
                             self.__routine([(pos_x, pos_y)], animation_tick, solo=True)
             else:
                 for (col, i) in update_payload:
+                    # TODO: do it with col getting smaller and smaller until there is a negative
+                    # number (also rename that crap because it's not readable)
+
                     if self.detecte_combinaison(i, col):
                         self.__routine([(i, col)], animation_tick, solo=True)
 
