@@ -126,6 +126,8 @@ class GridManager(Thread):
             Main loop
         """
 
+        # pylint: disable=too-many-branches,too-many-nested-blocks
+
         while not self.thread_stop_flag:
             # Fetch the next event towards the manager
             event = self.event_pool.next_and_delete(0)
@@ -151,7 +153,15 @@ class GridManager(Thread):
                         if res != 0:
                             error_event = Event(1, Event.TYPE_GRID_TICK_ERROR,
                                                 {"permutation": permutation, "res": res})
-                            print(f"Error when ticking: {res}")
+                            if self.__debug:
+                                print(f"Error when ticking: {res}")
+                            else:
+                                if res == 1:
+                                    print("Illegal move")
+                                elif res == 2:
+                                    print("Legal move but absolutely useless")
+                                else:
+                                    print("Unknown error x)")
                             self.event_pool.push(error_event)
                 elif event.msg_type == Event.TYPE_GEN_TRIGGER:
                     dimensions = event.payload["grid_size"]
@@ -516,8 +526,10 @@ class GridManager(Thread):
 
             if not (is_detected0 or is_detected1):  # If there is no alignement on both permuted
                 self.permute(permutation)  # Reset move
-                print("Is useless move")
-                print(f"Grid: {self.grid}")
+
+                if self.__debug:
+                    print("Is useless move")
+                    print(f"Grid: {self.grid}")
                 return 2  # Useless move
 
             if is_detected0: # If there is an alignement on group zero, delete everything
@@ -622,7 +634,8 @@ class GridManager(Thread):
         # Do the actual move
         res = self.__routine(permutation, animation_tick=animation_tick)
         if res != 0:
-            print("Routine had an error")
+            if self.__debug:
+                print("Routine had an error")
             return res # If there is any error, returns it
 
         # Do a lil animation shit
@@ -634,7 +647,8 @@ class GridManager(Thread):
         res = self.__refresh(update_payload, animation_tick, animation_wait_time)
 
         if res != 0:
-            print("Error when refreshed")
+            if self.__debug:
+                print("Error when refreshed")
             return res # If there is any error, returns it
 
         # Now done in gravity_tick
